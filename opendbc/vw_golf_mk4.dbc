@@ -1420,4 +1420,26 @@ CM_ SG_ 1470 XX_DLCORTLC1 "Might be DLC or TLC";
 CM_ SG_ 1470 XX_DLCORTLC2 "Might be DLC or TLC, might have wrong size";
 CM_ SG_ 1550 MFA_v_Signal_02 "0=km/h, 1=mph";
 
-VAL_ 1088 Waehlhebelposition__Getriebe_1_ 8 "P" 7 "R" 6 "N" 5 "D" 9 "U";
+VAL_ 1088 Waehlhebelposition__Getriebe_1_ 8 "P" 7 "R" 6 "N" 5 "D" 9 "U" 12 "S" 14 "T";
+
+BO_ 954 mSWA_1: 8 SWA
+ SG_ SWA_KD_Fehler : 59|1@1+ (1,0) [0|1] ""  Gateway_Kbi_VW_A
+ SG_ SWA_Car_detected_right : 45|1@1+ (1,0) [0|1] "" XXX
+ SG_ SWA_Blindspot_Warning_right : 44|1@1+ (1,0) [0|1] "" XXX
+ SG_ SWA_Car_detected_left : 29|1@1+ (1,0) [0|1] "" XXX
+ SG_ SWA_Blindspot_Warning_left : 28|1@1+ (1,0) [0|1] "" XXX
+ SG_ SWA_Sta_aktiv : 20|1@1+ (1,0) [0|1] ""  Gateway_Kbi_VW_A
+ SG_ SWA_Sta_passiv : 19|1@1+ (1,0) [0|1] ""  Gateway_Kbi_VW_A
+ SG_ SWA_Gong : 16|2@1+ (1,0) [0|3] ""  Gateway_Kbi_VW_A
+ SG_ SWA_Textbits : 12|4@1+ (1,0) [0|15] ""  Gateway_Kbi_VW_A
+ VAL_ 954 SWA_KD_Fehler 1 "error" 0 "no error" ;
+ VAL_ 954 SWA_Sta_aktiv 1 "on" 0 "off" ;
+ VAL_ 954 SWA_Sta_passiv 1 "on" 0 "off" ;
+ VAL_ 954 SWA_Gong 2 "Chime2" 1 "Chime1" 0 "no acoustic signal" ;
+ VAL_ 954 SWA_Textbits 0 "no text" ;
+ CM_ SG_ 954 SWA_KD_Fehler "minimum one error present in unit";
+ CM_ SG_ 954 SWA_Sta_aktiv "Lane change assist active, green LED in instrument cluster";
+ CM_ SG_ 954 SWA_Sta_passiv "Lane change assist passive, orange LED in instrument cluster";
+ CM_ SG_ 954 SWA_Gong "chime 1 as driver information, chime 2 as driver warning";
+ CM_ SG_ 954 SWA_Textbits "Textbits errors: 1: 'Side Assist currently not available';Text 2: 'Side Assist: system error';Text 3: 'Side Assist not available: sensor blocked.';Text 4: 'Side Assist not available with trailer";
+CM_ BO_ 954 "Lane change assist, cycle time = 50ms (to be verified)";
