@@ -47,7 +47,12 @@ class CarInterface(CarInterfaceBase):
         ret.transmissionType = TransmissionType.manual
 
       # FIXME: need a powertrain message ID to detect gateway installations
-      ret.networkLocation = NetworkLocation.fwdCamera
+      # ret.networkLocation = NetworkLocation.fwdCamera
+      
+      if 0x1A0 in fingerprint[1] or 0xAE in fingerprint[1]:
+        ret.networkLocation = NetworkLocation.gateway
+      else:
+        ret.networkLocation = NetworkLocation.fwdCamera
 
     else:
       # Set global MQB parameters
@@ -166,7 +171,12 @@ class CarInterface(CarInterfaceBase):
       # Averages of all 3V/NP Scala variants
       ret.mass = 1505 + STD_CARGO_KG
       ret.wheelbase = 2.84
-
+      
+    elif candidate == CAR.PASSAT_B6:
+      # R36 variant value
+      ret.mass = 1715 + STD_CARGO_KG
+      ret.wheelbase = 2.70
+      
     ret.centerToFront = ret.wheelbase * 0.45
 
     # TODO: get actual value, for now starting with reasonable value for
@@ -191,7 +201,7 @@ class CarInterface(CarInterfaceBase):
     self.cp_cam.update_strings(can_strings)
 
     ret = self.CS.update(self.cp, self.cp_cam, self.cp_ext, self.CP.transmissionType)
-    ret.canValid = True # self.cp.can_valid and self.cp_cam.can_valid
+    ret.canValid = self.cp.can_valid and self.cp_cam.can_valid
     ret.steeringRateLimited = self.CC.steer_rate_limited if self.CC is not None else False
 
     # TODO: add a field for this to carState, car interface code shouldn't write params
