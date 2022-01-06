@@ -45,15 +45,15 @@ class CarController():
     # **** Steering Controls ************************************************ #
 
     if frame % P.HCA_STEP == 0:
-      # Logic to avoid HCA state 4 "refused":
-      #   * Don't steer unless HCA is in state 3 "ready" or 5 "active"
-      #   * Don't steer at standstill
-      #   * Don't send > 3.00 Newton-meters torque
-      #   * Don't send the same torque for > 6 seconds
-      #   * Don't send uninterrupted steering for > 360 seconds
-      # One frame of HCA disabled is enough to reset the timer, without zeroing the
-      # torque value. Do that anytime we happen to have 0 torque, or failing that,
-      # when exceeding ~1/3 the 360 second timer.
+       Logic to avoid HCA state 4 "refused":
+         * Don't steer unless HCA is in state 3 "ready" or 5 "active"
+         * Don't steer at standstill
+         * Don't send > 3.00 Newton-meters torque
+         * Don't send the same torque for > 6 seconds
+         * Don't send uninterrupted steering for > 360 seconds
+       One frame of HCA disabled is enough to reset the timer, without zeroing the
+       torque value. Do that anytime we happen to have 0 torque, or failing that,
+       when exceeding ~1/3 the 360 second timer.
 
       if enabled and not (CS.out.standstill or CS.out.steerError or CS.out.steerWarning):
         new_steer = int(round(actuators.steer * P.STEER_MAX))
