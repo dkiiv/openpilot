@@ -233,7 +233,7 @@ class CarInterface(CarInterfaceBase):
     #PQTIMEBOMB STUFF START
     #Warning alert for the 6min timebomb found on PQ's
     ret.stopSteering = False
-    if False: #(self.frame % 100) == 0: # Set this to false/False if you want to turn this feature OFF!
+    if True: #(self.frame % 100) == 0: # Set this to false/False if you want to turn this feature OFF!
       if ret.cruiseState.enabled:
         self.pqCounter += 1
       if self.pqCounter >= 330*100: #time in seconds until counter threshold for pqTimebombWarn alert
@@ -247,7 +247,7 @@ class CarInterface(CarInterfaceBase):
           self.wheelGrabbed = True
           ret.stopSteering = True
           self.pqBypassCounter += 1
-          if self.pqBypassCounter >= 1.05*100: #time alloted for bypass
+          if self.pqBypassCounter >= 0.01*100: #time alloted for bypass
             self.wheelGrabbed = False
             self.pqCounter = 0
             self.pqBypassCounter = 0
