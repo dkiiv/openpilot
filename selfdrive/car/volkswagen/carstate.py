@@ -397,8 +397,8 @@ class CarState(CarStateBase):
   def get_pq_can_parser(CP):
     signals = [
       # sig_name, sig_address, default
-      ("LH3_BLW", "Lenkhilfe_3", 0),                # Absolute steering angle
-      ("LH3_BLWSign", "Lenkhilfe_3", 0),            # Steering angle sign
+      ("Lenkradwinkel", "LWI_01", 0),               # Absolute steering angle
+      ("Lenkradwinkel_Sign", "LWI_01", 0),          # Steering angle sign
       ("LH3_LM", "Lenkhilfe_3", 0),                 # Absolute driver torque input
       ("LH3_LMSign", "Lenkhilfe_3", 0),             # Driver torque input sign
       ("LH2_Sta_HCA", "Lenkhilfe_2", 0),            # Steering rack HCA status
