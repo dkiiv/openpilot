@@ -439,6 +439,7 @@ class CarState(CarStateBase):
 
     checks = [
       # sig_address, frequency
+      ("LWI_01", 100),            # From J500 Steering Assist with integrated sensors
       ("Bremse_1", 100),          # From J104 ABS/ESP controller
       ("Bremse_3", 100),          # From J104 ABS/ESP controller
       ("Lenkhilfe_3", 100),       # From J500 Steering Assist with integrated sensors
