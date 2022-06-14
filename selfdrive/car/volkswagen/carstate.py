@@ -226,27 +226,15 @@ class CarState(CarStateBase):
     ret.stockAeb = False
 
     # Update ACC radar status.
-    accStatus = ext_cp.vl["ACC_GRA_Anziege"]["ACA_StaACC"]
-    if accStatus == 2:
-      # ACC okay and enabled, but not currently engaged
-      ret.cruiseState.available = True
-      ret.cruiseState.enabled = False
-    elif accStatus in [3, 4, 5]:
-      # ACC okay and enabled, currently engaged and regulating speed (3) or engaged with driver accelerating (4) or overrun (5)
-      # Verify against Motor_2 to keep in lockstep with Panda safety
-      ret.cruiseState.available = True
-      if pt_cp.vl["Motor_2"]["GRA_Status"] in [1, 2]:
-        ret.cruiseState.enabled = True
-      else:
-        ret.cruiseState.enabled = False
+    ret.cruiseState.available = True
+    if pt_cp.vl["Motor_2"]['GRA_Status'] in [1, 2]:
+      ret.cruiseState.enabled = True
     else:
-      # ACC okay but disabled (1), or a radar visibility or other fault/disruption (6 or 7)
-      ret.cruiseState.available = False
-      ret.cruiseState.enabled = False
+        ret.cruiseState.enabled = False
 
     # Update ACC setpoint. When the setpoint reads as 255, the driver has not
     # yet established an ACC setpoint, so treat it as zero.
-    ret.cruiseState.speed = ext_cp.vl["ACC_GRA_Anziege"]["ACA_V_Wunsch"] * CV.KPH_TO_MS
+    ret.cruiseState.speed = pt_cp.vl["Motor_2"]['Soll_Geschwindigkeit_bei_GRA_Be'] * CV.KPH_TO_MS
     if ret.cruiseState.speed > 70:  # 255 kph in m/s == no current setpoint
       ret.cruiseState.speed = 0
 
@@ -438,6 +426,7 @@ class CarState(CarStateBase):
       ("GRA_Zeitluecke", "GRA_Neu"),             # ACC button, time gap adj
       ("COUNTER", "GRA_Neu"),                    # ACC button, message counter
       ("GRA_Sender", "GRA_Neu"),                 # GRA Sender Coding
+      ("Soll_Geschwindigkeit_bei_GRA_Be", "Motor_2", 0), # ACC speed setpoint from ECU??? check this
     ]
 
     checks = [
@@ -489,7 +478,7 @@ class CarState(CarStateBase):
         signals += PqExtraSignals.bsm_radar_signals
         checks += PqExtraSignals.bsm_radar_checks
 
-    return CANParser(DBC_FILES.pq, signals, checks, CANBUS.cam)
+    return None # CANParser(DBC_FILES.pq, signals, checks, CANBUS.cam)
 
 
 class MqbExtraSignals:
