@@ -95,6 +95,11 @@ class CarInterface(CarInterfaceBase):
     elif candidate == CAR.PASSAT_NMS:
       ret.mass = 1503 + STD_CARGO_KG
       ret.wheelbase = 2.80
+      # PQ lateral tuning HCA_Status 7
+      ret.lateralTuning.pid.kpBP = [0., 14., 20.]
+      ret.lateralTuning.pid.kiBP = [0., 14., 20.]
+      ret.lateralTuning.pid.kpV = [0.116, 0.13, 0.14]
+      ret.lateralTuning.pid.kiV = [0.09, 0.10, 0.11]
 
     elif candidate == CAR.POLO_MK6:
       ret.mass = 1230 + STD_CARGO_KG
