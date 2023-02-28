@@ -33,8 +33,8 @@ class CarInterface(CarInterfaceBase):
     ANGLE_COEF = 0.02874076
     ANGLE_COEF2 = 0.13532990
     SPEED_OFFSET = 39.99999842
-    SIGMOID_COEF_RIGHT = 0.45274055
-    SIGMOID_COEF_LEFT = 0.53974858
+    SIGMOID_COEF_RIGHT = 0.496
+    SIGMOID_COEF_LEFT = 0.496
     SPEED_COEF = 0.01000000
     x = ANGLE_COEF * (lateral_accel_value) * (40.23 / (max(0.2,v_ego + SPEED_OFFSET))**SPEED_COEF)
     sigmoid = erf(x)
