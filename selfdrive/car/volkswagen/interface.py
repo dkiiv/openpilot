@@ -47,6 +47,7 @@ class CarInterface(CarInterfaceBase):
     return out + friction + g_lat_accel * 0.7
   
   def torque_from_lateral_accel(self) -> TorqueFromLateralAccelCallbackType:
+    return CarInterfaceBase.torque_from_lateral_accel_linear
     if self.CP.carFingerprint == CAR.PASSAT_NMS:
       return self.torque_from_lateral_accel_passat_nms
     else:
