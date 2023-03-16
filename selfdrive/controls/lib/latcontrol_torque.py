@@ -76,7 +76,10 @@ class LatControlTorque(LatControl):
       lateral_accel_deadzone = curvature_deadzone * CS.vEgo ** 2
 
       low_speed_factor = interp(CS.vEgo, LOW_SPEED_X, LOW_SPEED_Y)
-      setpoint = desired_lateral_accel + low_speed_factor * desired_curvature
+      lookahead_desired_curvature = min(list(lat_plan.curvatures)[5:10] + [desired_curvature], key=lambda x: abs(x))
+      if sign(lookahead_desired_curvature) != sign(desired_curvature):
+        lookahead_desired_curvature = 0.0
+      setpoint = desired_lateral_accel + low_speed_factor * lookahead_desired_curvature
       measurement = actual_lateral_accel + low_speed_factor * actual_curvature
       error = setpoint - measurement
       gravity_lateral_accel = -params.roll * ACCELERATION_DUE_TO_GRAVITY
