@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 from cereal import car
-from math import fabs, erf, atan
+from math import fabs, erf, atan, cos
 from panda import Panda
 
-from common.numpy_fast import interp
+from common.numpy_fast import interp, sign, clip
 from common.conversions import Conversions as CV
 from selfdrive.car import STD_CARGO_KG, create_button_event, scale_tire_stiffness, get_safety_config, create_mads_event
 from selfdrive.car.gm.values import CAR, CruiseButtons, CarControllerParams, EV_CAR, CAMERA_ACC_CAR
@@ -66,12 +66,50 @@ class CarInterface(CarInterfaceBase):
     SPEED_OFFSET2 = -0.36618369
 
     ff = get_steer_feedforward_erf1(lateral_accel_value, v_ego, ANGLE_COEF, ANGLE_COEF2, ANGLE_OFFSET, SPEED_OFFSET, SIGMOID_COEF_RIGHT, SIGMOID_COEF_LEFT, SPEED_COEF, SPEED_COEF2, SPEED_OFFSET2)
-    friction = interp(
-      lateral_jerk_desired,
-      [-FRICTION_THRESHOLD_LAT_JERK, FRICTION_THRESHOLD_LAT_JERK],
-      [-torque_params.friction, torque_params.friction]
-    )
-    return ff + friction + g_lat_accel * 0.6
+    
+    # now lateral jerk component
+    if sign(lateral_accel_value) == sign(lateral_jerk_desired):
+      ANGLE_COEF = 2.87742908
+      ANGLE_COEF2 = 3.0171422
+      SPEED_OFFSET = 0.32037237
+      SIGMOID_COEF_1 = 0.13778183
+      SIGMOID_COEF_2 = 0.78604993
+      SPEED_COEF = 0.11084122
+      SPEED_COEF2 = 1.84607376
+
+      x = ANGLE_COEF * (lateral_jerk_desired) * (40.23 / (max(1.0,v_ego + SPEED_OFFSET))**SPEED_COEF)
+      sigmoid1 = x / (1. + fabs(x))
+      sigmoid1 *= SIGMOID_COEF_1
+      
+      x = ANGLE_COEF2 * (lateral_jerk_desired) * (40.23 / (max(1.0,v_ego + SPEED_OFFSET))**SPEED_COEF2)
+      sigmoid2 = x / (1. + fabs(x))
+      sigmoid2 *= SIGMOID_COEF_2 / (fabs(v_ego)+1)
+
+      friction = sigmoid1 + sigmoid2
+    else:
+      ANGLE_COEF = 2.06223884
+      ANGLE_COEF2 = 0.17299524
+      ANGLE_OFFSET = 10.08002596
+      SPEED_OFFSET = -0.11092718
+      SIGMOID_COEF_1 = 0.17167717
+      SIGMOID_COEF_2 = 1.99966155
+      SPEED_COEF = 1.04884478
+      SPEED_COEF2 = 2.00000000
+      
+      x = ANGLE_COEF * (lateral_jerk_desired) * (40.23 / (max(1.0,v_ego + SPEED_OFFSET))**SPEED_COEF)
+      sigmoid1 = x / (1. + fabs(x))
+      sigmoid1 *= SIGMOID_COEF_1
+      
+      x = ANGLE_COEF2 * (lateral_jerk_desired) * (40.23 / (max(1.0,v_ego + SPEED_OFFSET))**SPEED_COEF2)
+      sigmoid2 = x / (1. + fabs(x))
+      sigmoid2 *= SIGMOID_COEF_2
+      
+      max_speed = ANGLE_OFFSET
+      speed_norm = 0.5 * cos(clip(v_ego / max_speed, 0., 1.) * 3.14) + 0.5
+      
+      friction = (1-speed_norm) * sigmoid1 + speed_norm * sigmoid2
+    
+    return ff + friction + g_lat_accel * 0.5
   
   @staticmethod
   def torque_from_lateral_accel_bolt_euv(lateral_accel_value, torque_params, lateral_accel_error, lateral_accel_deadzone, friction_compensation, v_ego, g_lat_accel, lateral_jerk_desired):

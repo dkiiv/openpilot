@@ -49,7 +49,7 @@ class LatControlTorque(LatControl):
       self.torque_params.friction = self._torque_friction
       self.frame = 0
 
-  def update(self, active, CS, VM, params, last_actuators, steer_limited, desired_curvature, desired_curvature_rate, llk, mean_curvature=0.0):
+  def update(self, active, CS, VM, params, last_actuators, steer_limited, desired_curvature, desired_curvature_rate, llk, lat_plan):
     pid_log = log.ControlsState.LateralTorqueState.new_message()
 
     if not active:
@@ -65,7 +65,10 @@ class LatControlTorque(LatControl):
         actual_curvature = interp(CS.vEgo, [2.0, 5.0], [actual_curvature_vm, actual_curvature_llk])
         curvature_deadzone = 0.0
       desired_lateral_accel = desired_curvature * CS.vEgo ** 2
-      desired_lateral_jerk = desired_curvature_rate * CS.vEgo**2
+      min_planned_curvature_rate = min(list(lat_plan.curvatureRates)[5:12] + [desired_curvature_rate], key=lambda x: abs(x))
+      if sign(min_planned_curvature_rate) != sign(desired_curvature_rate):
+        min_planned_curvature_rate = 0.0
+      desired_lateral_jerk = min_planned_curvature_rate * CS.vEgo**2
 
       # desired rate is the desired rate of change in the setpoint, not the absolute desired curvature
       # desired_lateral_jerk = desired_curvature_rate * CS.vEgo ** 2
@@ -73,8 +76,8 @@ class LatControlTorque(LatControl):
       lateral_accel_deadzone = curvature_deadzone * CS.vEgo ** 2
 
       low_speed_factor = interp(CS.vEgo, LOW_SPEED_X, LOW_SPEED_Y)
-      setpoint = desired_lateral_accel + low_speed_factor * min(abs(desired_curvature), abs(mean_curvature)) * sign(desired_curvature)
-      measurement = actual_lateral_accel + low_speed_factor * min(abs(actual_curvature), abs(mean_curvature)) * sign(actual_curvature)
+      setpoint = desired_lateral_accel + low_speed_factor * desired_curvature
+      measurement = actual_lateral_accel + low_speed_factor * actual_curvature
       error = setpoint - measurement
       gravity_lateral_accel = -params.roll * ACCELERATION_DUE_TO_GRAVITY
       pid_log.error = CarInterfaceBase.torque_from_lateral_accel_linear(error, self.torque_params, error,
