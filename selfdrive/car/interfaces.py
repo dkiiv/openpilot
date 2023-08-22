@@ -4,6 +4,7 @@ import numpy as np
 import os
 import time
 from abc import abstractmethod, ABC
+from difflib import SequenceMatcher
 from json import load
 from typing import Any, Dict, Optional, Tuple, List, Callable, Union
 
@@ -33,9 +34,12 @@ FRICTION_THRESHOLD = 0.3
 TORQUE_PARAMS_PATH = os.path.join(BASEDIR, 'selfdrive/car/torque_data/params.yaml')
 TORQUE_OVERRIDE_PATH = os.path.join(BASEDIR, 'selfdrive/car/torque_data/override.yaml')
 TORQUE_SUBSTITUTE_PATH = os.path.join(BASEDIR, 'selfdrive/car/torque_data/substitute.yaml')
+TORQUE_NN_MODEL_PATH = os.path.join(BASEDIR, 'selfdrive/car/torque_data/lat_models')
 
 GAC_DICT = {1: 1, 2: 2, 3: 3}
 
+def similarity(s1:str, s2:str) -> float:
+  return SequenceMatcher(None, s1, s2).ratio()
 
 def get_torque_params(candidate):
   with open(TORQUE_SUBSTITUTE_PATH) as f:
@@ -125,20 +129,30 @@ class FluxModel:
       if not hasattr(self, activation):
         raise ValueError(f"Unknown activation: {activation}")
   
-def get_nn_model_path(car, eps_firmware) -> Union[str, None]:
-  eps_firmware = eps_firmware.replace("\\", "")
-  model_path = f"/data/openpilot/selfdrive/car/torque_data/lat_models/{car} {eps_firmware}.json"
-  if not os.path.isfile(model_path):
-    model_path = f"/data/openpilot/selfdrive/car/torque_data/lat_models/{car}.json"
-    if not os.path.isfile(model_path):
-      model_path = None
-  return model_path
+def get_nn_model_path(car, eps_firmware) -> Tuple[Union[str, None, float]]:
+  if len(eps_firmware) > 3:
+    eps_firmware = eps_firmware.replace("\\", "")
+    check_model = f"{car} {eps_firmware}"
+  else:
+    check_model = car
+  model_path = None
+  max_similarity = -1.0
+  for f in os.listdir(TORQUE_NN_MODEL_PATH):
+    if f.endswith(".json"):
+      model = f.replace(".json", "").replace(f"{TORQUE_NN_MODEL_PATH}/","")
+      similarity_score = similarity(model, check_model)
+      if similarity_score > max_similarity:
+        max_similarity = similarity_score
+        model_path = os.path.join(TORQUE_NN_MODEL_PATH, f)
+  if 0.0 <= max_similarity < 0.9:
+    model_path = None
+  return model_path, max_similarity
   
-def get_nn_model(car, eps_firmware) -> Union[FluxModel, None]:
-  model = get_nn_model_path(car, eps_firmware)
+def get_nn_model(car, eps_firmware) -> Tuple[Union[FluxModel, None, float]]:
+  model, similarity_score = get_nn_model_path(car, eps_firmware)
   if model is not None:
     model = FluxModel(model)
-  return model
+  return model, similarity_score
 
 # generic car and radar interfaces
 
@@ -225,9 +239,10 @@ class CarInterfaceBase(ABC):
     
     if ret.lateralTuning.which() == 'torque':
       eps_firmware = str(next((fw.fwVersion for fw in car_fw if fw.ecu == "eps"), ""))
-      model = get_nn_model_path(candidate, eps_firmware)
+      model, similarity_score = get_nn_model_path(candidate, eps_firmware)
       if model is not None:
         ret.lateralTuning.torque.nnModelName = os.path.splitext(os.path.basename(model))[0]
+        ret.lateralTuning.torque.nnModelFuzzyMatch = (similarity_score < 0.99)
     
 
     # Set common params using fields set by the car interface

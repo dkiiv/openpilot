@@ -566,6 +566,7 @@ struct CarParams {
     latAccelFactor @6 :Float32;
     latAccelOffset @7 :Float32;
     nnModelName @8 :Text;
+    nnModelFuzzyMatch @9 :Bool;
   }
 
   struct LongitudinalPIDTuning {

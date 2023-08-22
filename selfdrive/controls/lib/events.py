@@ -259,6 +259,7 @@ def no_gps_alert(CP: car.CarParams, CS: car.CarState, sm: messaging.SubMaster, m
   
 def torque_nn_load_alert(CP: car.CarParams, CS: car.CarState, sm: messaging.SubMaster, metric: bool, soft_disable_time: int) -> Alert:
   model_name = CP.lateralTuning.torque.nnModelName
+  fuzzy = CP.lateralTuning.torque.nnModelFuzzyMatch
   if model_name == "":
     return Alert(
       "NN torque controller not loaded",
@@ -270,13 +271,13 @@ def torque_nn_load_alert(CP: car.CarParams, CS: car.CarState, sm: messaging.SubM
       car, eps = model_name.split('b\'')
       eps = 'b\'' + eps
       return Alert(
-        f"NN torque: {car}",
+        f"NN torque ({fuzzy = }): {car}",
         f"eps: {eps}",
         AlertStatus.userPrompt, AlertSize.mid,
         Priority.LOW, VisualAlert.none, AudibleAlert.prompt, 6.0)
     else:
       return Alert(
-        "NN torque controller loaded",
+        f"NN torque controller loaded ({fuzzy = })",
         model_name,
         AlertStatus.userPrompt, AlertSize.mid,
         Priority.LOW, VisualAlert.none, AudibleAlert.prompt, 6.0)
