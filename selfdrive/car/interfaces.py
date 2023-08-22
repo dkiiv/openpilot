@@ -216,7 +216,7 @@ class CarInterfaceBase(ABC):
     return self.lat_torque_nn_model.evaluate(x)
   
   def initialize_lat_torque_nn(self, car, eps_firmware):
-    self.lat_torque_nn_model = get_nn_model(car, eps_firmware)
+    self.lat_torque_nn_model, _ = get_nn_model(car, eps_firmware)
     return (self.lat_torque_nn_model is not None)
 
   @staticmethod
