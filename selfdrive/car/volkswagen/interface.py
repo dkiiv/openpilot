@@ -39,10 +39,7 @@ class CarInterface(CarInterfaceBase):
       else:
         ret.transmissionType = TransmissionType.manual
 
-      if any(msg in fingerprint[1] for msg in (0x1A0, 0xC2)):  # Bremse_1, Lenkwinkel_1
-        ret.networkLocation = NetworkLocation.gateway
-      else:
-        ret.networkLocation = NetworkLocation.fwdCamera
+      ret.networkLocation = NetworkLocation.gateway
 
       # The PQ port is in dashcam-only mode due to a fixed six-minute maximum timer on HCA steering. An unsupported
       # EPS flash update to work around this timer, and enable steering down to zero, is available from:
@@ -50,7 +47,7 @@ class CarInterface(CarInterfaceBase):
       # It is documented in a four-part blog series:
       #   https://blog.willemmelching.nl/carhacking/2022/01/02/vw-part1/
       # Panda ALLOW_DEBUG firmware required.
-      ret.dashcamOnly = True
+      ret.dashcamOnly = False
 
     else:
       # Set global MQB parameters
@@ -130,7 +127,7 @@ class CarInterface(CarInterfaceBase):
 
     elif candidate == CAR.PASSAT_NMS:
       ret.mass = 1503 + STD_CARGO_KG
-      ret.wheelbase = 2.80
+      ret.wheelbase = 2.62
       ret.minEnableSpeed = 20 * CV.KPH_TO_MS  # ACC "basic", no FtS
       ret.minSteerSpeed = 50 * CV.KPH_TO_MS
       ret.steerActuatorDelay = 0.2
