@@ -126,6 +126,7 @@ class FluxModel:
         raise ValueError(f"Unknown activation: {activation}")
   
 def get_nn_model_path(car, eps_firmware) -> Union[str, None]:
+  eps_firmware = eps_firmware.replace("\\", "")
   model_path = f"/data/openpilot/selfdrive/car/torque_data/lat_models/{car} {eps_firmware}.json"
   if not os.path.isfile(model_path):
     model_path = f"/data/openpilot/selfdrive/car/torque_data/lat_models/{car}.json"
