@@ -146,7 +146,7 @@ class CarInterfaceBase(ABC):
   def __init__(self, CP, CarController, CarState):
     self.CP = CP
     self.VM = VehicleModel(CP)
-    eps_firmware = next((fw.fwVersion for fw in CP.carFw if fw.ecu == "eps"), "")
+    eps_firmware = str(next((fw.fwVersion for fw in CP.carFw if fw.ecu == "eps"), ""))
     self.has_lateral_torque_nn = self.initialize_lat_torque_nn(CP.carFingerprint, eps_firmware)
 
     self.frame = 0
