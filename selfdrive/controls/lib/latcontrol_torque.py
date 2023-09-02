@@ -56,6 +56,7 @@ class LatControlTorque(LatControl):
       # of lat accel and roll
       # Past value is computed using previous desired lat accel and observed roll
       self.torque_from_nn = CI.get_ff_nn
+      self.nn_friction_override = CI.lat_torque_nn_model.friction_override
       
       # setup future time offsets
       self.nn_time_offset = CP.steerActuatorDelay + 0.2
@@ -149,6 +150,10 @@ class LatControlTorque(LatControl):
         nn_error_input = [CS.vEgo, error, friction_input, 0.0] \
                               + past_errors + future_errors
         pid_log.error = self.torque_from_nn(nn_error_input)
+        if self.nn_friction_override:
+          pid_log.error += self.torque_from_lateral_accel(0.0, self.torque_params,
+                                            error,
+                                            lateral_accel_deadzone, friction_compensation=True)
         
         # compute feedforward (same as nn setpoint output)
         
