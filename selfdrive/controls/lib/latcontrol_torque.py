@@ -105,14 +105,12 @@ class LatControlTorque(LatControl):
         if self.use_nn:
           actual_curvature_rate = -VM.calc_curvature(math.radians(CS.steeringRateDeg), CS.vEgo, 0.0)
           actual_lateral_jerk = actual_curvature_rate * CS.vEgo ** 2
-          desired_lateral_jerk = desired_curvature_rate * CS.vEgo ** 2
       else:
         actual_curvature_vm = -VM.calc_curvature(math.radians(CS.steeringAngleDeg - params.angleOffsetDeg), CS.vEgo, params.roll)
         actual_curvature_llk = llk.angularVelocityCalibrated.value[2] / CS.vEgo
         actual_curvature = interp(CS.vEgo, [2.0, 5.0], [actual_curvature_vm, actual_curvature_llk])
         curvature_deadzone = 0.0
         actual_lateral_jerk = 0.0
-        desired_lateral_jerk = 0.0
       desired_lateral_accel = desired_curvature * CS.vEgo ** 2
 
       # desired rate is the desired rate of change in the setpoint, not the absolute desired curvature
@@ -143,9 +141,11 @@ class LatControlTorque(LatControl):
         future_error_func = get_predict_error_func(past_errors + [error], self.past_times + [0.0])
         future_errors = future_error_func(self.nn_future_times_np).tolist()
         
-        # compute NN error response
+        desired_lateral_jerk = (future_planned_lateral_accels[0] - desired_lateral_accel) / self.nn_future_times[0]
         lateral_jerk_error = 0.1 * (desired_lateral_jerk - actual_lateral_jerk)
-        nn_error_input = [CS.vEgo, error, lateral_jerk_error, 0.0] \
+        
+        # compute NN error response
+        nn_error_input = [CS.vEgo, error, 0.25 * error + lateral_jerk_error, 0.0] \
                               + past_errors + future_errors
         pid_log.error = self.torque_from_nn(nn_error_input)
         if self.nn_friction_override:
@@ -154,7 +154,7 @@ class LatControlTorque(LatControl):
                                             lateral_accel_deadzone, friction_compensation=True)
         
         # compute feedforward (same as nn setpoint output)
-        nn_input = [CS.vEgo, desired_lateral_accel, error, roll] \
+        nn_input = [CS.vEgo, desired_lateral_accel, desired_lateral_jerk, roll] \
                               + past_lateral_accels_desired + future_planned_lateral_accels \
                               + past_rolls + future_rolls
         ff = self.torque_from_nn(nn_input)
