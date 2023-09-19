@@ -89,7 +89,7 @@ class LanePlanner:
       self.l_lane_change_prob = desire_state[log.LateralPlan.Desire.laneChangeLeft]
       self.r_lane_change_prob = desire_state[log.LateralPlan.Desire.laneChangeRight]
 
-  def get_d_path(self, v_ego, path_t, path_xyz, vcurv):
+  def get_d_path(self, CS, v_ego, path_t, path_xyz, vcurv):
     # how visible is each lane?
     l_vis = (self.lll_prob * 0.5 + 0.5) * interp(self.lll_std, [0, 0.9], [1.0, 0.0])
     r_vis = (self.rll_prob * 0.5 + 0.5) * interp(self.rll_std, [0, 0.9], [1.0, 0.0])
@@ -112,12 +112,20 @@ class LanePlanner:
       self.lane_width_estimate.update(current_lane_width)
       self.lane_width = self.lane_width_estimate.x
 
+      # track how wide the lanes are getting up ahead
+      max_lane_width_seen = current_lane_width
+      half_len = len(self.lll_y) // 2
+
       # how much are we centered in our lane right now?
       starting_centering = (self.rll_y[0] + self.lll_y[0]) * 0.5
       # go through all points in our lanes...
       for index in range(len(self.lll_y)):
         # get the raw lane width for this point
         lane_width = self.rll_y[index] - self.lll_y[index]
+        # is this lane getting bigger relatively close to us? useful for later determining if we want to mix in the
+        # model path with very large lanes (that might be splitting into multiple lanes)
+        if lane_width > max_lane_width_seen and index <= half_len:
+          max_lane_width_seen = lane_width
         use_min_lane_distance = min(lane_width * 0.5, KEEP_MIN_DISTANCE_FROM_LANE)
         # how much do we trust this? we want to be seeing both pretty well
         width_trust = min(l_vis, r_vis)
@@ -158,11 +166,12 @@ class LanePlanner:
         self.ultimate_path[index] = ideal_point
 
       # do we want to mix in the model path a little bit if lanelines are going south?
-      final_ultimate_path_mix = self.lane_change_multiplier * clamp(lane_trust * 1.4, 0.0, 1.0)
+      final_ultimate_path_mix = self.lane_change_multiplier * clamp(lane_trust * 1.4, 0.0, 1.0) * interp(max_lane_width_seen, [4.0, 6.0], [1.0, 0.0])
 
       safe_idxs = np.isfinite(self.ll_t)
       if safe_idxs[0]:
         path_xyz[:,1] = final_ultimate_path_mix * np.interp(path_t, self.ll_t[safe_idxs], self.ultimate_path[safe_idxs]) + (1 - final_ultimate_path_mix) * path_xyz[:,1]
+
     # apply camera offset after everything
     path_xyz[:, 1] += CAMERA_OFFSET
 
