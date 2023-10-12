@@ -133,7 +133,7 @@ class LatControlTorque(LatControl):
         pid_log.error = self.torque_from_nn(nn_error_input)
 
         # compute feedforward (same as nn setpoint output)
-        nn_input = [CS.vEgo, desired_lateral_accel, error, roll] \
+        nn_input = [CS.vEgo, desired_lateral_accel, error * 0.25, roll] \
                               + past_lateral_accels_desired + future_planned_lateral_accels \
                               + past_rolls + future_rolls
         ff = self.torque_from_nn(nn_input)
