@@ -31,11 +31,14 @@ class CarState(CarStateBase):
     # FrogPilot variables
     self.params = Params()
     self.params_memory = Params("/dev/shm/params")
+    self.conditional_experimental_mode = self.CP.conditionalExperimental
     self.driving_personalities_via_wheel = self.CP.drivingPersonalitiesUIWheel
+    self.experimental_mode_via_wheel = self.CP.experimentalModeViaWheel
     self.personality_profile = self.params.get_int('LongitudinalPersonality')
     self.previous_personality_profile = self.params.get_int('LongitudinalPersonality')
     self.display_menu = False
     self.distance_previously_pressed = False
+    self.lkas_previously_pressed = False
     self.single_pedal_mode = False
     self.display_timer = 0
 
@@ -144,7 +147,7 @@ class CarState(CarStateBase):
     # Driving personalities function - Credit goes to Mangomoose!
     if self.driving_personalities_via_wheel:
       # Check if the car has a camera
-      has_camera = self.CP.networkLocation == NetworkLocation.fwdCamera and not self.CP.flags & GMFlags.NO_CAMERA.value
+      has_camera = self.CP.networkLocation == NetworkLocation.fwdCamera and not (self.CP.flags & (GMFlags.NO_CAMERA.value | GMFlags.CC_LONG.value))
 
       if has_camera:
         # Need to subtract by 1 to comply with the personality profiles of "0", "1", and "2"
@@ -168,6 +171,21 @@ class CarState(CarStateBase):
         put_int_nonblocking("LongitudinalPersonality", self.personality_profile)
         self.params_memory.put_bool("FrogPilotTogglesUpdated", True)
         self.previous_personality_profile = self.personality_profile
+
+    # Toggle Experimental Mode from steering wheel function
+    if self.experimental_mode_via_wheel and ret.cruiseState.available:
+      lkas_pressed = pt_cp.vl["ASCMSteeringButton"]["LKAButton"]
+      if lkas_pressed and not self.lkas_previously_pressed:
+        if self.conditional_experimental_mode:
+          # Set "ConditionalStatus" to work with "Conditional Experimental Mode"
+          conditional_status = self.params_memory.get_int("ConditionalStatus")
+          override_value = 0 if conditional_status in (1, 2) else 1 if conditional_status >= 2 else 2
+          self.params_memory.put_int("ConditionalStatus", override_value)
+        else:
+          experimental_mode = self.params.get_bool("ExperimentalMode")
+          # Invert the value of "ExperimentalMode"
+          put_bool_nonblocking("ExperimentalMode", not experimental_mode)
+      self.lkas_previously_pressed = lkas_pressed
 
     return ret
 
