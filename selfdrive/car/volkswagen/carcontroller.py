@@ -63,12 +63,12 @@ class CarController:
       if not hca_enabled:
         self.hca_frame_timer_running = 0
       
-      if (CS.out.steerAngleDeg >= 0 and CS.out.steerRateDeg >= 0) or (CS.out.steerAngleDeg < 0 and CS.out.steerRateDeg < 0):
+      if (CS.out.steeringAngleDeg >= 0 and CS.out.steeringRateDeg >= 0) or (CS.out.steeringAngleDeg < 0 and CS.out.steeringRateDeg < 0):
         # Positive (away from center) steering rate
-        self.hca_mode = 7 if abs(CS.out.steerRateDeg) > self.hca_switch_deadband else self.hca_mode
+        self.hca_mode = 7 if abs(CS.out.steeringRateDeg) > self.hca_switch_deadband else self.hca_mode
       else:
         # Negative (toward center) steering rate
-        self.hca_mode = 5 if abs(CS.out.steerRateDeg) > self.hca_switch_deadband else self.hca_mode
+        self.hca_mode = 5 if abs(CS.out.steeringRateDeg) > self.hca_switch_deadband else self.hca_mode
 
       self.eps_timer_soft_disable_alert = self.hca_frame_timer_running > self.CCP.STEER_TIME_ALERT / DT_CTRL
       self.apply_steer_last = apply_steer
