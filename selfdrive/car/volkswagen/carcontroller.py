@@ -22,6 +22,8 @@ class CarController:
     self.gra_acc_counter_last = None
     self.frame = 0
     self.eps_timer_soft_disable_alert = False
+    self.hca_mode = 5                 # init in (active)status 5
+    self.hca_switch_deadband = 1      # deg/s, rate trigger for HCA mode switch
     self.hca_frame_timer_running = 0
     self.hca_frame_same_torque = 0
 
@@ -60,10 +62,17 @@ class CarController:
 
       if not hca_enabled:
         self.hca_frame_timer_running = 0
+      
+      if (CS.out.steerAngleDeg >= 0 and CS.out.steerRateDeg >= 0) or (CS.out.steerAngleDeg < 0 and CS.out.steerRateDeg < 0):
+        # Positive (away from center) steering rate
+        self.hca_mode = 7 if abs(CS.out.steerRateDeg) > self.hca_switch_deadband else self.hca_mode
+      else:
+        # Negative (toward center) steering rate
+        self.hca_mode = 5 if abs(CS.out.steerRateDeg) > self.hca_switch_deadband else self.hca_mode
 
       self.eps_timer_soft_disable_alert = self.hca_frame_timer_running > self.CCP.STEER_TIME_ALERT / DT_CTRL
       self.apply_steer_last = apply_steer
-      can_sends.append(self.CCS.create_steering_control(self.packer_pt, CANBUS.pt, apply_steer, hca_enabled))
+      can_sends.append(self.CCS.create_steering_control(self.packer_pt, CANBUS.pt, apply_steer, hca_enabled, self.hca_mode))
 
       if self.CP.flags & VolkswagenFlags.STOCK_HCA_PRESENT:
         # Pacify VW Emergency Assist driver inactivity detection by changing its view of driver steering input torque
