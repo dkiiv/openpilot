@@ -26,7 +26,7 @@ class CarControllerParams:
   # MQB vs PQ maximums are shared, but rate-of-change limited differently
   # based on safety requirements driven by lateral accel testing.
 
-  STEER_MAX = 400                          # Max heading control assist torque 3.00 Nm
+  STEER_MAX = 300                          # Max heading control assist torque 3.00 Nm
   STEER_DRIVER_MULTIPLIER = 3              # weight driver torque heavily
   STEER_DRIVER_FACTOR = 1                  # from dbc
 

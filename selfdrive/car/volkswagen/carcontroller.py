@@ -44,9 +44,9 @@ class CarController:
       # of HCA disabled; this is done whenever output happens to be zero.
 
       if CC.latActive:
-        new_steer = int(round(actuators.steer * self.CCP.STEER_MAX))
+        new_steer = int(round(actuators.steer * 400))
         if abs(apply_driver_steer_torque_limits(new_steer, self.apply_steer_last, CS.out.steeringTorque, self.CCP)) >= 3:
-          apply_steer = apply_driver_steer_torque_limits(new_steer, self.apply_steer_last, CS.out.steeringTorque, self.CCP) - 1
+          apply_steer = apply_driver_steer_torque_limits(new_steer, self.apply_steer_last, CS.out.steeringTorque, self.CCP)
           self.hca_mode = 7
         else:
           apply_steer = apply_driver_steer_torque_limits(new_steer, self.apply_steer_last, CS.out.steeringTorque, self.CCP)
