@@ -23,8 +23,8 @@ class CarController:
     self.frame = 0
     self.eps_timer_soft_disable_alert = False
     self.hca_mode = 5                 # init in (active)status 5
-    self.hca_rateUp_hysteresis = 13   # deg/s, rate up trigger for HCA mode switch
-    self.hca_rateDown_hysteresis = 5  # deg/s, rate down trigger for HCA mode switch
+    self.hca_rateUp_hysteresis = 3    # deg/s, rate up trigger for HCA mode switch
+    self.hca_rateDown_hysteresis = 3  # deg/s, rate down trigger for HCA mode switch
     self.steeringAngleDegLast = 0     # previous frame's steering angle
     self.hca_frame_timer_running = 0
     self.hca_frame_same_torque = 0
