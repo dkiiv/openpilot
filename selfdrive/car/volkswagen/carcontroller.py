@@ -23,9 +23,6 @@ class CarController:
     self.frame = 0
     self.eps_timer_soft_disable_alert = False
     self.hca_mode = 5                 # init in (active)status 5
-    self.hca_rateUp_hysteresis = 3    # deg/s, rate up trigger for HCA mode switch
-    self.hca_rateDown_hysteresis = 3  # deg/s, rate down trigger for HCA mode switch
-    self.steeringAngleDegLast = 0     # previous frame's steering angle
     self.hca_frame_timer_running = 0
     self.hca_frame_same_torque = 0
 
@@ -48,7 +45,12 @@ class CarController:
 
       if CC.latActive:
         new_steer = int(round(actuators.steer * self.CCP.STEER_MAX))
-        apply_steer = apply_driver_steer_torque_limits(new_steer, self.apply_steer_last, CS.out.steeringTorque, self.CCP)
+        if abs(apply_driver_steer_torque_limits(new_steer, self.apply_steer_last, CS.out.steeringTorque, self.CCP)) >= 3:
+          apply_steer = apply_driver_steer_torque_limits(new_steer, self.apply_steer_last, CS.out.steeringTorque, self.CCP) - 1
+          self.hca_mode = 7
+        else:
+          apply_steer = apply_driver_steer_torque_limits(new_steer, self.apply_steer_last, CS.out.steeringTorque, self.CCP)
+          self.hca_mode = 5
         self.hca_frame_timer_running += self.CCP.STEER_STEP
         if self.apply_steer_last == apply_steer:
           self.hca_frame_same_torque += self.CCP.STEER_STEP
@@ -64,17 +66,9 @@ class CarController:
 
       if not hca_enabled:
         self.hca_frame_timer_running = 0
-      
-      if (self.steeringAngleDegLast > CS.out.steeringAngleDeg):
-        # wheel returning to center
-        self.hca_mode = 5 if abs(CS.out.steeringRateDeg) > self.hca_rateDown_hysteresis else 7
-      else:
-        # wheel turning away from center
-        self.hca_mode = 7 if abs(CS.out.steeringRateDeg) > self.hca_rateUp_hysteresis else 5
 
       self.eps_timer_soft_disable_alert = self.hca_frame_timer_running > self.CCP.STEER_TIME_ALERT / DT_CTRL
       self.apply_steer_last = apply_steer
-      self.steeringAngleDegLast = CS.out.steeringAngleDeg
       can_sends.append(self.CCS.create_steering_control(self.packer_pt, CANBUS.pt, apply_steer, hca_enabled, self.hca_mode))
 
       if self.CP.flags & VolkswagenFlags.STOCK_HCA_PRESENT:
