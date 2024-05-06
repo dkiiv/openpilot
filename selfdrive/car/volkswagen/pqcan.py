@@ -1,7 +1,7 @@
 def create_steering_control(packer, bus, apply_steer, lkas_enabled, hca_mode):
 
   values = {
-    "LM_Offset": abs(apply_steer) - 100 if hca_mode == 7 else abs(apply_steer),
+    "LM_Offset": abs(apply_steer),
     "LM_OffSign": 1 if apply_steer < 0 else 0,
     "HCA_Status": hca_mode if (lkas_enabled and apply_steer != 0) else 3,
     "Vib_Freq": 16,

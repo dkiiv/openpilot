@@ -23,8 +23,6 @@ class CarController:
     self.frame = 0
     self.eps_timer_soft_disable_alert = False
     self.hca_mode = 5                     # init in (active)status 5
-    self.apply_steer_interpolation = 0    # init the interpolation signal
-    self.pseudo_STEER_MAX = 400           # init our artificial STEER_MAX value
     self.hca_frame_timer_running = 0
     self.hca_frame_same_torque = 0
 
@@ -46,10 +44,9 @@ class CarController:
       # of HCA disabled; this is done whenever output happens to be zero.
 
       if CC.latActive:
-        new_steer = int(round(actuators.steer * self.pseudo_STEER_MAX))
-        self.CCP.STEER_MAX = self.pseudo_STEER_MAX
+        new_steer = int(round(actuators.steer * self.CCP.STEER_MAX))
         apply_steer = apply_driver_steer_torque_limits(new_steer, self.apply_steer_last, CS.out.steeringTorque, self.CCP)
-        self.hca_mode = 7 if abs(apply_steer) >= 300 else 5
+        self.hca_mode = 7 if abs(apply_steer) >= 200 else 5
         self.hca_frame_timer_running += self.CCP.STEER_STEP
         if self.apply_steer_last == apply_steer:
           self.hca_frame_same_torque += self.CCP.STEER_STEP
@@ -58,9 +55,6 @@ class CarController:
             self.hca_frame_same_torque = 0
         else:
           self.hca_frame_same_torque = 0
-
-        if (abs(self.apply_steer_last) - abs(apply_steer)) > 6:
-          apply_steer = abs(self.apply_steer_last) - 6
 
         hca_enabled = abs(apply_steer) > 0
       else:
@@ -123,7 +117,7 @@ class CarController:
                                                            cancel=CC.cruiseControl.cancel, resume=CC.cruiseControl.resume))
 
     new_actuators = actuators.copy()
-    new_actuators.steer = self.apply_steer_last / self.pseudo_STEER_MAX
+    new_actuators.steer = self.apply_steer_last / self.CCP.STEER_MAX
     new_actuators.steerOutputCan = self.apply_steer_last
 
     self.gra_acc_counter_last = CS.gra_stock_values["COUNTER"]
