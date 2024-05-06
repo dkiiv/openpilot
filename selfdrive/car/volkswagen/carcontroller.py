@@ -45,12 +45,8 @@ class CarController:
 
       if CC.latActive:
         new_steer = int(round(actuators.steer * 400))
-        if abs(apply_driver_steer_torque_limits(new_steer, self.apply_steer_last, CS.out.steeringTorque, self.CCP)) >= 3:
-          apply_steer = apply_driver_steer_torque_limits(new_steer, self.apply_steer_last, CS.out.steeringTorque, self.CCP)
-          self.hca_mode = 7
-        else:
-          apply_steer = apply_driver_steer_torque_limits(new_steer, self.apply_steer_last, CS.out.steeringTorque, self.CCP)
-          self.hca_mode = 5
+        apply_steer = apply_driver_steer_torque_limits(new_steer, self.apply_steer_last, CS.out.steeringTorque, self.CCP)
+        self.hca_mode = 7 if abs(apply_steer) >= 3 else 5
         self.hca_frame_timer_running += self.CCP.STEER_STEP
         if self.apply_steer_last == apply_steer:
           self.hca_frame_same_torque += self.CCP.STEER_STEP
