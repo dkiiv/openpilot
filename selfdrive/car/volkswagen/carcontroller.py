@@ -23,7 +23,7 @@ class CarController:
     self.frame = 0
     self.eps_timer_soft_disable_alert = False
     self.hca_mode = 5                 # init in (active)status 5
-    self.hca_switch_deadband = 5      # deg/s, rate trigger for HCA mode switch
+    self.hca_switch_deadband = 13      # deg/s, rate trigger for HCA mode switch
     self.hca_frame_timer_running = 0
     self.hca_frame_same_torque = 0
 
