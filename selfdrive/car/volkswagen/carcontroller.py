@@ -55,6 +55,8 @@ class CarController:
             self.hca_frame_same_torque = 0
         else:
           self.hca_frame_same_torque = 0
+        if (abs(self.apply_steer_last) - abs(apply_steer)) > self.CCP.STEER_DELTA_DOWN:
+          apply_steer = abs(self.apply_steer_last) - self.CCP.STEER_DELTA_DOWN
         hca_enabled = abs(apply_steer) > 0
       else:
         hca_enabled = False
