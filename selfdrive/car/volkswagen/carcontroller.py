@@ -3,7 +3,7 @@ from opendbc.can.packer import CANPacker
 from openpilot.common.numpy_fast import clip
 from openpilot.common.conversions import Conversions as CV
 from openpilot.common.realtime import DT_CTRL
-from openpilot.selfdrive.car import apply_driver_steer_torque_limits
+from openpilot.selfdrive.car import vw_apply_driver_steer_torque_limits
 from openpilot.selfdrive.car.volkswagen import mqbcan, pqcan
 from openpilot.selfdrive.car.volkswagen.values import CANBUS, PQ_CARS, CarControllerParams, VolkswagenFlags
 
@@ -23,6 +23,7 @@ class CarController:
     self.frame = 0
     self.eps_timer_soft_disable_alert = False
     self.hca_mode = 5                 # init in (active)status 5
+    self.pseudo_STEER_MAX = 400
     self.hca_frame_timer_running = 0
     self.hca_frame_same_torque = 0
 
@@ -44,9 +45,9 @@ class CarController:
       # of HCA disabled; this is done whenever output happens to be zero.
 
       if CC.latActive:
-        new_steer = int(round(actuators.steer * 400))
-        apply_steer = apply_driver_steer_torque_limits(new_steer, self.apply_steer_last, CS.out.steeringTorque, self.CCP)
-        self.hca_mode = 7 if abs(apply_steer) >= 3 else 5
+        new_steer = int(round(actuators.steer * self.pseudo_STEER_MAX))
+        apply_steer = vw_apply_driver_steer_torque_limits(new_steer, self.apply_steer_last, CS.out.steeringTorque, self.CCP, self.pseudo_STEER_MAX)
+        self.hca_mode = 7 if abs(apply_steer) >= 300 else 5
         self.hca_frame_timer_running += self.CCP.STEER_STEP
         if self.apply_steer_last == apply_steer:
           self.hca_frame_same_torque += self.CCP.STEER_STEP
