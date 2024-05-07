@@ -57,8 +57,8 @@ class CarController:
           self.hca_frame_same_torque = 0
 
       # Custom HCA mode switching
-        hca_status = 7 if (CS.out.steeringAngleDeg >= self.hca_centerDeadband or \
-                            (hca_status == 7 and abs(apply_steer) >= 50 and CS.out.steeringAngleDeg <= self.hca_centerDeadband)) else 5
+        self.hca_mode = 7 if (CS.out.steeringAngleDeg >= self.hca_centerDeadband or \
+                            (self.hca_mode == 7 and abs(apply_steer) >= 50 and CS.out.steeringAngleDeg <= self.hca_centerDeadband)) else 5
 
         hca_enabled = abs(apply_steer) > 0
       else:
