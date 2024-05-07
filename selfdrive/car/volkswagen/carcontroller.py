@@ -46,7 +46,6 @@ class CarController:
       if CC.latActive:
         new_steer = int(round(actuators.steer * self.CCP.STEER_MAX))
         apply_steer = apply_driver_steer_torque_limits(new_steer, self.apply_steer_last, CS.out.steeringTorque, self.CCP)
-        self.hca_mode = 7 if abs(apply_steer) >= 200 else 5
         self.hca_frame_timer_running += self.CCP.STEER_STEP
         if self.apply_steer_last == apply_steer:
           self.hca_frame_same_torque += self.CCP.STEER_STEP
@@ -55,6 +54,14 @@ class CarController:
             self.hca_frame_same_torque = 0
         else:
           self.hca_frame_same_torque = 0
+
+      # Custom HCA mode switching, with a little torque interpolation
+        if self.hca_mode == 7 and abs(apply_steer) >= 150:
+          self.hca_mode = 7
+        else:
+          self.hca_mode = 7 if abs(apply_steer) >= 250 else 5
+        if apply_steer > self.apply_steer_last and self.hca_mode == 7 and self.apply_steer_last < 298:
+          apply_steer = ((apply_steer - self.apply_steer_last) / 2) + self.apply_steer_last
 
         hca_enabled = abs(apply_steer) > 0
       else:
