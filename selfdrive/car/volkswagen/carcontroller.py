@@ -23,7 +23,7 @@ class CarController:
     self.frame = 0
     self.eps_timer_soft_disable_alert = False
     self.hca_mode = 5                     # init in (active)status 5
-    self.hca_centerDeadband = 8           # init center dead band, we do not switch to HCA7 within this!
+    self.hca_centerDeadband = 13          # init center dead band, we do not switch to HCA7 within this!
     self.steeringAngle = 0                # init our own steeringAngle
     self.hca_frame_timer_running = 0
     self.hca_frame_same_torque = 0
