@@ -23,6 +23,7 @@ class CarController:
     self.frame = 0
     self.eps_timer_soft_disable_alert = False
     self.hca_mode = 5                     # init in (active)status 5
+    self.hca_centerDeadband = 8           # init center dead band, we do not switch to 7 within this!
     self.hca_frame_timer_running = 0
     self.hca_frame_same_torque = 0
 
@@ -55,13 +56,9 @@ class CarController:
         else:
           self.hca_frame_same_torque = 0
 
-      # Custom HCA mode switching, with a little torque interpolation
-        if self.hca_mode == 7 and abs(apply_steer) >= 150:
-          self.hca_mode = 7
-        else:
-          self.hca_mode = 7 if abs(apply_steer) >= 250 else 5
-        if apply_steer > self.apply_steer_last and self.hca_mode == 7 and self.apply_steer_last < 298:
-          apply_steer = ((apply_steer - self.apply_steer_last) / 2) + self.apply_steer_last
+      # Custom HCA mode switching
+        hca_status = 7 if (CS.out.steeringAngleDeg >= self.hca_centerDeadband or \
+                            (hca_status == 7 and abs(apply_steer) >= 50 and CS.out.steeringAngleDeg <= self.hca_centerDeadband)) else 5
 
         hca_enabled = abs(apply_steer) > 0
       else:
