@@ -25,6 +25,7 @@ class CarController:
     self.hca_mode = 5                     # init in (active)status 5
     self.hca_centerDeadband = 8           # init center dead band, we do not switch to HCA7 within this!
     self.steeringAngle = 0                # init our own steeringAngle
+    self.steeringRate = 0                 # init our own steeringRate
     self.hca_frame_timer_running = 0
     self.hca_frame_same_torque = 0
 
@@ -59,8 +60,8 @@ class CarController:
 
         if self.CCS == pqcan: # Custom HCA mode switching (PQ only)
           self.steeringAngle = CS.out.steeringAngleDeg if CS.out.steeringAngleDeg >= 0 else CS.out.steeringAngleDeg * -1
-          self.hca_mode = 7 if ((self.steeringAngle >= self.hca_centerDeadband or \
-                            abs(apply_steer) - abs(self.apply_steer_last) == self.CCP.STEER_DELTA_UP) or \
+          self.steeringRate = CS.out.steeringRateDeg if CS.out.steeringRateDeg >= 0 else CS.out.steeringRateDeg * -1
+          self.hca_mode = 7 if ((self.steeringAngle >= self.hca_centerDeadband or self.steeringRate >= 10) or \
                             (self.hca_mode == 7 and abs(apply_steer) >= 50 and self.steeringAngle <= self.hca_centerDeadband)) else 5
 
         hca_enabled = abs(apply_steer) > 0
