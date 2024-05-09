@@ -22,9 +22,11 @@ class CarController:
     self.gra_acc_counter_last = None
     self.frame = 0
     self.eps_timer_soft_disable_alert = False
-    self.hca_mode = 5                     # init in (active)status 5
-    self.hca_centerDeadband = 13          # init center dead band, we do not switch to HCA7 within this!
-    self.steeringAngle = 0                # init our own steeringAngle
+    self.hca_mode = 5                                       # init in (active)status 5
+    self.hca_centerDeadband = 13                            # init center dead band, we do not switch to HCA7 within this!
+    self.steeringAngle = 0                                  # init our own steeringAngle
+    self.steerDeltaUpHCA5 = self.CCP.STEER_DELTA_UP         # init HCA 5 delta up ramp rate
+    self.steerDeltaUpHCA7 = self.CCP.STEER_DELTA_UP / 1.5   # init HCA 7 delta up ramp rate, adjust "/" value to change ramp rate difference
     self.hca_frame_timer_running = 0
     self.hca_frame_same_torque = 0
 
@@ -59,8 +61,13 @@ class CarController:
 
         if self.CCS == pqcan: # Custom HCA mode switching (PQ only)
           self.steeringAngle = CS.out.steeringAngleDeg if CS.out.steeringAngleDeg >= 0 else CS.out.steeringAngleDeg * -1
-          self.hca_mode = 7 if ((self.steeringAngle >= self.hca_centerDeadband) or \
-                            (self.hca_mode == 7 and ((abs(apply_steer) >= 50 and self.steeringAngle <= 8) or self.steeringAngle >= 8))) else 5
+          if ((self.steeringAngle >= self.hca_centerDeadband) or \
+                            (self.hca_mode == 7 and ((abs(apply_steer) >= 50 and self.steeringAngle <= 8) or self.steeringAngle >= 8))):
+            self.hca_mode = 7
+            self.CCP.STEER_DELTA_UP = self.steerDeltaUpHCA7
+          else:
+            self.hca_mode = 5
+            self.CCP.STEER_DELTA_UP = self.steerDeltaUpHCA5
 
         hca_enabled = abs(apply_steer) > 0
       else:
