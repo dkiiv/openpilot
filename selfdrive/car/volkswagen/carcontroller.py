@@ -27,6 +27,7 @@ class CarController:
     self.hca_centerDeadbandLow = 4                          # init center dead band low
     self.hca_deadbandNM_switch = 150                        # init dead band NM switch
     self.steeringAngle = 0                                  # init our own steeringAngle
+    self.steeringAngle_last = 0                             # init our own steeringAngle_last
     self.steerDeltaUpHCA5 = self.CCP.STEER_DELTA_UP         # init HCA 5 delta up ramp rate
     self.steerDeltaUpHCA7 = self.CCP.STEER_DELTA_UP / 2     # init HCA 7 delta up ramp rate, adjust "/" value to change ramp rate difference
     self.hca_frame_timer_running = 0
@@ -58,8 +59,11 @@ class CarController:
                (self.steeringAngle >= self.hca_centerDeadbandLow and abs(new_steer) >= self.hca_deadbandNM_switch)) or \
                (self.hca_mode == 7 and ((abs(new_steer) >= 25 and self.steeringAngle <= self.hca_centerDeadbandLow) or \
                                          self.steeringAngle >= self.hca_centerDeadbandLow))):
+            if self.steeringAngle_last > self.steeringAngle:
+              self.CCP.STEER_DELTA_UP = self.steerDeltaUpHCA5
+            else:
+              self.CCP.STEER_DELTA_UP = self.steerDeltaUpHCA7
             self.hca_mode = 7
-            self.CCP.STEER_DELTA_UP = self.steerDeltaUpHCA7
           else:
             self.hca_mode = 5
             self.CCP.STEER_DELTA_UP = self.steerDeltaUpHCA5
@@ -136,6 +140,7 @@ class CarController:
     new_actuators = actuators.copy()
     new_actuators.steer = self.apply_steer_last / self.CCP.STEER_MAX
     new_actuators.steerOutputCan = self.apply_steer_last
+    self.steeringAngle_last = self.steeringAngle
 
     self.gra_acc_counter_last = CS.gra_stock_values["COUNTER"]
     self.frame += 1
