@@ -51,6 +51,19 @@ class CarController:
 
       if CC.latActive:
         new_steer = int(round(actuators.steer * self.CCP.STEER_MAX))
+
+        if self.CCS == pqcan: # Custom HCA mode switching (PQ only)
+          self.steeringAngle = CS.out.steeringAngleDeg if CS.out.steeringAngleDeg >= 0 else CS.out.steeringAngleDeg * -1
+          if (((self.steeringAngle >= self.hca_centerDeadbandHigh and abs(new_steer) <= self.hca_deadbandNM_switch) or \
+               (self.steeringAngle >= self.hca_centerDeadbandLow and abs(new_steer) >= self.hca_deadbandNM_switch)) or \
+               (self.hca_mode == 7 and ((abs(new_steer) >= 25 and self.steeringAngle <= self.hca_centerDeadbandLow) or \
+                                         self.steeringAngle >= self.hca_centerDeadbandLow))):
+            self.hca_mode = 7
+            self.CCP.STEER_DELTA_UP = self.steerDeltaUpHCA7
+          else:
+            self.hca_mode = 5
+            self.CCP.STEER_DELTA_UP = self.steerDeltaUpHCA5
+
         apply_steer = apply_driver_steer_torque_limits(new_steer, self.apply_steer_last, CS.out.steeringTorque, self.CCP)
         self.hca_frame_timer_running += self.CCP.STEER_STEP
         if self.apply_steer_last == apply_steer:
@@ -60,19 +73,6 @@ class CarController:
             self.hca_frame_same_torque = 0
         else:
           self.hca_frame_same_torque = 0
-
-        if self.CCS == pqcan: # Custom HCA mode switching (PQ only)
-          self.steeringAngle = CS.out.steeringAngleDeg if CS.out.steeringAngleDeg >= 0 else CS.out.steeringAngleDeg * -1
-          if (((self.steeringAngle >= self.hca_centerDeadbandHigh and abs(apply_steer) <= self.hca_deadbandNM_switch) or \
-               (self.steeringAngle >= self.hca_centerDeadbandLow and abs(apply_steer) >= self.hca_deadbandNM_switch)) or \
-               (self.hca_mode == 7 and ((abs(apply_steer) >= 25 and self.steeringAngle <= self.hca_centerDeadbandLow) or \
-                                         self.steeringAngle >= self.hca_centerDeadbandLow))):
-            self.hca_mode = 7
-            self.CCP.STEER_DELTA_UP = self.steerDeltaUpHCA7
-          else:
-            self.hca_mode = 5
-            self.CCP.STEER_DELTA_UP = self.steerDeltaUpHCA5
-
         hca_enabled = abs(apply_steer) > 0
       else:
         hca_enabled = False
