@@ -68,8 +68,7 @@ class CarController:
             else:
               self.CCP.STEER_DELTA_UP = self.steerDeltaUpHCA7
 
-            if self.steeringRate >= 5 and self.hca_mode_last == 5:
-              new_steer = int(round(new_steer * 0.7))
+            new_steer = int(round(new_steer * 0.7)) if self.steeringRate >= 5 and self.hca_mode_last == 5 else new_steer
             self.hca_mode = 7
           else:
             self.hca_mode = 5
