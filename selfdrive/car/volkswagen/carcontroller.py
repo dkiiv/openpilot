@@ -58,7 +58,9 @@ class CarController:
         if self.CCS == pqcan: # Custom HCA mode switching (PQ only)
           self.steeringAngle = CS.out.steeringAngleDeg if CS.out.steeringAngleDeg >= 0 else CS.out.steeringAngleDeg * -1
           self.steeringRate = CS.out.steeringRateDeg if CS.out.steeringRateDeg >= 0 else CS.out.steeringRateDeg *-1
-          if ((self.steeringAngle >= self.hca_centerDeadbandHigh or abs(new_steer) >= self.hca_deadbandNM_switch) or \
+          if ((self.steeringAngle >= self.hca_centerDeadbandHigh) or \
+               ((CS.out.leftBlinker or CS.out.rightBlinker) and abs(new_steer >= self.hca_deadbandNM_switch)) or \
+               (abs(new_steer) >= (self.hca_deadbandNM_switch / 3) and not (CS.out.leftBlinker or CS.out.rightBlinker)) or \
                (self.hca_mode == 7 and ((abs(new_steer) >= 25 and self.steeringAngle <= self.hca_centerDeadbandLow) or \
                                          self.steeringAngle >= self.hca_centerDeadbandLow))):
 
