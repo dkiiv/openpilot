@@ -127,10 +127,10 @@ class CarInterface(CarInterfaceBase):
       ret.mass = 1503
       ret.wheelbase = 2.62
       #ret.minEnableSpeed = 20 * CV.KPH_TO_MS  # ACC "basic", no FtS
-      ret.steerActuatorDelay = 0.0
+      ret.steerActuatorDelay = 0.1
       ret.lateralTuning.pid.kpBP = [0.0, 41.0]
       ret.lateralTuning.pid.kiBP = [0.0, 41.0]
-      ret.lateralTuning.pid.kf = 0.00006
+      ret.lateralTuning.pid.kf = 0.00005
       ret.lateralTuning.pid.kpV = [0.25, 0.25]
       ret.lateralTuning.pid.kiV = [0.30, 0.27]
       CarInterfaceBase.configure_torque_tune(candidate, ret.lateralTuning)
