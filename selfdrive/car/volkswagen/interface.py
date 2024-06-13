@@ -132,7 +132,7 @@ class CarInterface(CarInterfaceBase):
       ret.lateralTuning.pid.kiBP = [0.0, 41.0]
       ret.lateralTuning.pid.kf = 0.00003
       ret.lateralTuning.pid.kpV = [0.15, 0.15]
-      ret.lateralTuning.pid.kiV = [0.38, 0.38]
+      ret.lateralTuning.pid.kiV = [0.42, 0.42]
       CarInterfaceBase.configure_torque_tune(candidate, ret.lateralTuning)
 
     elif candidate == CAR.POLO_MK6:
