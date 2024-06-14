@@ -129,13 +129,13 @@ class CarInterface(CarInterfaceBase):
       #ret.minEnableSpeed = 20 * CV.KPH_TO_MS  # ACC "basic", no FtS
       # tuning stuff: https://github.com/commaai/openpilot/wiki/Tuning
       ret.steerActuatorDelay = 0.11
-      ret.lateralTuning.pid.kpBP = [0.0, 41.0]
-      ret.lateralTuning.pid.kiBP = [0.0, 41.0]
+      ret.lateralTuning.pid.kpBP = [0.0]
+      ret.lateralTuning.pid.kiBP = [0.0]
       ret.lateralTuning.pid.kf = 0.000027
-      ret.lateralTuning.pid.kpV = [0.07656, 0.07656]
-      ret.lateralTuning.pid.kiV = [0.46, 0.46]
+      ret.lateralTuning.pid.kpV = [0.0666072]
+      ret.lateralTuning.pid.kiV = [0.46]
       ret.longitudinalTuning.kpV = [0.69]
-      ret.longitudinalTuning.kiV = [0.1]
+      ret.longitudinalTuning.kiV = [0.113]
       CarInterfaceBase.configure_torque_tune(candidate, ret.lateralTuning)
 
     elif candidate == CAR.POLO_MK6:
