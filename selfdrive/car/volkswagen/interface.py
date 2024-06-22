@@ -132,8 +132,8 @@ class CarInterface(CarInterfaceBase):
       ret.lateralTuning.pid.kpBP = [0.0]
       ret.lateralTuning.pid.kiBP = [0.0]
       ret.lateralTuning.pid.kf = 0.0000146
-      ret.lateralTuning.pid.kpV = [0.0348]
-      ret.lateralTuning.pid.kiV = [0.5]
+      ret.lateralTuning.pid.kpV = [0.03]
+      ret.lateralTuning.pid.kiV = [0.54]
       ret.longitudinalTuning.kpV = [0.951]
       ret.longitudinalTuning.kiV = [0.107]
       CarInterfaceBase.configure_torque_tune(candidate, ret.lateralTuning)
