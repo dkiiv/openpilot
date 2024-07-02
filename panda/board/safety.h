@@ -88,7 +88,7 @@ int safety_fwd_hook(int bus_num, int addr) {
 }
 
 bool get_longitudinal_allowed(void) {
-  return controls_allowed && !gas_pressed_prev;
+  return controls_allowed && (!gas_pressed_prev || cruise_override);
 }
 
 // Given a CRC-8 poly, generate a static lookup table to use with a fast CRC-8
@@ -347,6 +347,7 @@ int set_safety_hooks(uint16_t mode, uint16_t param) {
   ts_steer_req_mismatch_last = 0;
   valid_steer_req_count = 0;
   invalid_steer_req_count = 0;
+  cruise_override = false;
 
   // reset samples
   reset_sample(&vehicle_speed);
