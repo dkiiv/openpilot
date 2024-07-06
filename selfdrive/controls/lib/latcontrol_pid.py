@@ -10,6 +10,7 @@ class LatControlPID(LatControl):
     super().__init__(CP, CI)
     self.pid = PIDController((CP.lateralTuning.pid.kpBP, CP.lateralTuning.pid.kpV),
                              (CP.lateralTuning.pid.kiBP, CP.lateralTuning.pid.kiV),
+                             (CP.lateralTuning.pid.kdBP, CP.lateralTuning.pid.kdV),
                              k_f=CP.lateralTuning.pid.kf, pos_limit=self.steer_max, neg_limit=-self.steer_max)
     self.get_steer_feedforward = CI.get_steer_feedforward_function()
 
