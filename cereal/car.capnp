@@ -552,6 +552,8 @@ struct CarParams {
     kiBP @2 :List(Float32);
     kiV @3 :List(Float32);
     kf @4 :Float32;
+    kdBP @5 :Float32;
+    kdV @6 :Float32;
   }
 
   struct LateralTorqueTuning {
