@@ -125,6 +125,7 @@ static void volkswagen_pq_rx_hook(const CANPacket_t *to_push) {
     }
 
     if (volkswagen_longitudinal) {
+      cruise_override = true;
       if (addr == MSG_MOTOR_5) {
         // ACC main switch on is a prerequisite to enter controls, exit controls immediately on main switch off
         // Signal: Motor_5.GRA_Hauptschalter

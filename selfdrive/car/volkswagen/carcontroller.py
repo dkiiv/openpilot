@@ -78,14 +78,27 @@ class CarController(CarControllerBase):
     # **** Acceleration Controls ******************************************** #
 
     if self.frame % self.CCP.ACC_CONTROL_STEP == 0 and self.CP.openpilotLongitudinalControl:
-      acc_control = self.CCS.acc_control_value(CS.out.cruiseState.available, CS.out.accFaulted, CC.longActive)
+      acc_control = self.CCS.acc_control_value(CS.out.cruiseState.available, CS.out.accFaulted, CC.longActive, CC.cruiseControl.override)
       if frogpilot_variables.sport_plus:
         accel = clip(actuators.accel, self.CCP.ACCEL_MIN, self.CCP.ACCEL_MAX_PLUS) if CC.longActive else 0
       else:
         accel = clip(actuators.accel, self.CCP.ACCEL_MIN, self.CCP.ACCEL_MAX) if CC.longActive else 0
       stopping = actuators.longControlState == LongCtrlState.stopping
       starting = actuators.longControlState == LongCtrlState.pid and (CS.esp_hold_confirmation or CS.out.vEgo < self.CP.vEgoStopping)
-      can_sends.extend(self.CCS.create_acc_accel_control(self.packer_pt, CANBUS.pt, CS.acc_type, CC.longActive, accel,
+
+      if CS.out.vEgo == 0 and CC.longActive: #try pulsing brake every 1s to prevent ABS fault?
+        pulseAccelEntry = +1
+        if pulseAccelEntry >= 50: # 1 second of standstill
+          pulseAccelCounter = +1
+          if pulseAccelCounter > 4:
+            pulseAccelEntry = 0
+            pulseAccelCounter = 0
+      else:
+        pulseAccelEntry = 0
+        pulseAccelCounter = 0
+
+      accel = accel if pulseAccelCounter == 0 else 0
+      can_sends.extend(self.CCS.create_acc_accel_control(self.packer_pt, CANBUS.pt, CS.acc_type, accel,
                                                          acc_control, stopping, starting, CS.esp_hold_confirmation))
 
     # **** HUD Controls ***************************************************** #
@@ -101,7 +114,7 @@ class CarController(CarControllerBase):
       lead_distance = 0
       if hud_control.leadVisible and self.frame * DT_CTRL > 1.0:  # Don't display lead until we know the scaling factor
         lead_distance = 512 if CS.upscale_lead_car_signal else 8
-      acc_hud_status = self.CCS.acc_hud_status_value(CS.out.cruiseState.available, CS.out.accFaulted, CC.longActive)
+      acc_hud_status = self.CCS.acc_hud_status_value(CS.out.cruiseState.available, CS.out.accFaulted, acc_control, CC.cruiseControl.override)
       # FIXME: follow the recent displayed-speed updates, also use mph_kmh toggle to fix display rounding problem?
       set_speed = hud_control.setSpeed * CV.MS_TO_KPH
       can_sends.append(self.CCS.create_acc_hud_control(self.packer_pt, CANBUS.pt, acc_hud_status, set_speed,

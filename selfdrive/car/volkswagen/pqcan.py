@@ -1,5 +1,3 @@
-from openpilot.common.numpy_fast import clip
-
 def create_steering_control(packer, bus, apply_steer, lkas_enabled):
   values = {
     "LM_Offset": abs(apply_steer),
@@ -49,9 +47,8 @@ def create_acc_buttons_control(packer, bus, gra_stock_values, cancel=False, resu
 
   return packer.make_can_msg("GRA_Neu", bus, values)
 
-# TODO: Add overrun status, where long is engaged but being overridden by driver
-def acc_control_value(main_switch_on, acc_faulted, long_active):
-  if long_active:
+def acc_control_value(main_switch_on, acc_faulted, long_active, cruiseOverride):
+  if long_active or cruiseOverride:
     acc_control = 1
   elif main_switch_on:
     acc_control = 2
@@ -60,12 +57,11 @@ def acc_control_value(main_switch_on, acc_faulted, long_active):
 
   return acc_control
 
-# TODO: Add overrun status, where long is engaged but being overridden by driver
-def acc_hud_status_value(main_switch_on, acc_faulted, long_active):
+def acc_hud_status_value(main_switch_on, acc_faulted, acc_control, cruiseOverride):
   if acc_faulted:
     hud_status = 6
-  elif long_active:
-    hud_status = 3
+  elif acc_control == 1:
+    hud_status = 4 if cruiseOverride else 3
   elif main_switch_on:
     hud_status = 2
   else:
@@ -74,8 +70,9 @@ def acc_hud_status_value(main_switch_on, acc_faulted, long_active):
   return hud_status
 
 
-def create_acc_accel_control(packer, bus, acc_type, acc_enabled, accel, acc_control, stopping, starting, esp_hold):
+def create_acc_accel_control(packer, bus, acc_type, accel, acc_control, stopping, starting, esp_hold):
   commands = []
+  acc_enabled = 1 if acc_control == 1 else 0
 
   values = {
     "ACS_Sta_ADR": acc_control,
@@ -84,8 +81,8 @@ def create_acc_accel_control(packer, bus, acc_type, acc_enabled, accel, acc_cont
     "ACS_Anhaltewunsch": acc_type == 1 and stopping,
     "ACS_FreigSollB": acc_enabled,
     "ACS_Sollbeschl": accel if acc_enabled else 3.01,
-    "ACS_zul_Regelabw": 0.0 if acc_enabled else 1.27,
-    "ACS_max_AendGrad": clip(((accel * -1.5) if accel < 0 else 0), 0.5, 3.0) if acc_enabled else 5.08,
+    "ACS_zul_Regelabw": 0.05 if acc_enabled else 1.27,
+    "ACS_max_AendGrad": 3.0 if acc_enabled else 5.08,
   }
 
   commands.append(packer.make_can_msg("ACC_System", bus, values))
