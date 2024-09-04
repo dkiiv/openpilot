@@ -17,6 +17,7 @@ class CarState(CarStateBase):
     self.esp_hold_confirmation = False
     self.upscale_lead_car_signal = False
     self.eps_stock_values = False
+    self.LH_3_Sign = False
 
   def create_button_events(self, pt_cp, buttons):
     button_events = []
@@ -180,25 +181,21 @@ class CarState(CarStateBase):
     ret.steeringPressed = abs(ret.steeringTorque) > self.CCP.STEER_DRIVER_ALLOWANCE
     ret.yawRate = pt_cp.vl["Bremse_5"]["Giergeschwindigkeit"] * (1, -1)[int(pt_cp.vl["Bremse_5"]["Vorzeichen_der_Giergeschwindigk"])] * CV.DEG_TO_RAD
     hca_status = self.CCP.hca_status_values.get(pt_cp.vl["Lenkhilfe_2"]["LH2_Sta_HCA"])
-    ret.steerFaultTemporary, ret.steerFaultPermanent = self.update_hca_state(hca_status)
+    ret.steerFaultTemporary = True if pt_cp.vl["Lenkhilfe_2"]["LH2_PLA_Abbr"] == 2 else False
+    self.LH_3_Sign = pt_cp.vl["Lenkhilfe_3"]["LH3_BLWSign"]
+
+    self.Gate_Komf_stock = pt_cp.vl["Gate_Komf_1"]
+    self.LH2_steeringState = pt_cp.vl["Lenkhilfe_2"]["LH2_aktLenkeingriff"]
 
     # Update gas, brakes, and gearshift.
     ret.gas = pt_cp.vl["Motor_3"]["Fahrpedal_Rohsignal"] / 100.0
     ret.gasPressed = ret.gas > 0
     ret.brake = pt_cp.vl["Bremse_5"]["Bremsdruck"] / 250.0  # FIXME: this is pressure in Bar, not sure what OP expects
-    ret.brakePressed = bool(pt_cp.vl["Motor_2"]["Bremslichtschalter"])
+    ret.brakePressed = False
     ret.parkingBrake = bool(pt_cp.vl["Kombi_1"]["Bremsinfo"])
 
     # Update gear and/or clutch position data.
-    if trans_type == TransmissionType.automatic:
-      ret.gearShifter = self.parse_gear_shifter(self.CCP.shifter_values.get(pt_cp.vl["Getriebe_1"]["Waehlhebelposition__Getriebe_1_"], None))
-    elif trans_type == TransmissionType.manual:
-      ret.clutchPressed = not pt_cp.vl["Motor_1"]["Kupplungsschalter"]
-      reverse_light = bool(pt_cp.vl["Gate_Komf_1"]["GK1_Rueckfahr"])
-      if reverse_light:
-        ret.gearShifter = GearShifter.reverse
-      else:
-        ret.gearShifter = GearShifter.drive
+    ret.gearShifter = GearShifter.drive
 
     # Update door and trunk/hatch lid open status.
     ret.doorOpen = any([pt_cp.vl["Gate_Komf_1"]["GK1_Fa_Tuerkont"],
@@ -233,7 +230,8 @@ class CarState(CarStateBase):
     # Update ACC radar status.
     self.acc_type = ext_cp.vl["ACC_System"]["ACS_Typ_ACC"]
     ret.cruiseState.available = bool(pt_cp.vl["Motor_5"]["GRA_Hauptschalter"])
-    ret.cruiseState.enabled = pt_cp.vl["Motor_2"]["GRA_Status"] in (1, 2)
+    #ret.cruiseState.enabled = pt_cp.vl["Motor_2"]["GRA_Status"] in (1, 2)
+    ret.cruiseState.enabled = ret.cruiseState.available
     if self.CP.pcmCruise:
       ret.accFaulted = ext_cp.vl["ACC_GRA_Anzeige"]["ACA_StaACC"] in (6, 7)
     else:

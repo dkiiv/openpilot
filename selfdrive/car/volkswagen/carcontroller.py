@@ -3,7 +3,7 @@ from opendbc.can.packer import CANPacker
 from openpilot.common.numpy_fast import clip
 from openpilot.common.conversions import Conversions as CV
 from openpilot.common.realtime import DT_CTRL
-from openpilot.selfdrive.car import apply_driver_steer_torque_limits
+from openpilot.selfdrive.car import apply_std_steer_angle_limits
 from openpilot.selfdrive.car.interfaces import CarControllerBase
 from openpilot.selfdrive.car.volkswagen import mqbcan, pqcan
 from openpilot.selfdrive.car.volkswagen.values import CANBUS, CarControllerParams, VolkswagenFlags
@@ -19,12 +19,14 @@ class CarController(CarControllerBase):
     self.CCS = pqcan if CP.flags & VolkswagenFlags.PQ else mqbcan
     self.packer_pt = CANPacker(dbc_name)
 
-    self.apply_steer_last = 0
+    self.apply_angle_last = 0
     self.gra_acc_counter_last = None
     self.frame = 0
-    self.eps_timer_soft_disable_alert = False
-    self.hca_frame_timer_running = 0
-    self.hca_frame_same_torque = 0
+    self.PLA_status = 0
+    self.PLA_ESP_status = 0
+    self.PLA_entryCounter = 0
+    self.CSsteeringAngleDegLast = 0
+    self.CSLH3_SignLast = 0
 
   def update(self, CC, CS, ext_bus, now_nanos, frogpilot_variables):
     actuators = CC.actuators
@@ -34,46 +36,33 @@ class CarController(CarControllerBase):
     # **** Steering Controls ************************************************ #
 
     if self.frame % self.CCP.STEER_STEP == 0:
-      # Logic to avoid HCA state 4 "refused":
-      #   * Don't steer unless HCA is in state 3 "ready" or 5 "active"
-      #   * Don't steer at standstill
-      #   * Don't send > 3.00 Newton-meters torque
-      #   * Don't send the same torque for > 6 seconds
-      #   * Don't send uninterrupted steering for > 360 seconds
-      # MQB racks reset the uninterrupted steering timer after a single frame
-      # of HCA disabled; this is done whenever output happens to be zero.
-
+      # PLA_status definitions:
+      #  8 = standby
+      #  6 = active
+      #  4 = activatable, entry request signal
       if CC.latActive:
-        new_steer = int(round(actuators.steer * self.CCP.STEER_MAX))
-        apply_steer = apply_driver_steer_torque_limits(new_steer, self.apply_steer_last, CS.out.steeringTorque, self.CCP)
-        self.hca_frame_timer_running += self.CCP.STEER_STEP
-        if self.apply_steer_last == apply_steer:
-          self.hca_frame_same_torque += self.CCP.STEER_STEP
-          if self.hca_frame_same_torque > self.CCP.STEER_TIME_STUCK_TORQUE / DT_CTRL:
-            apply_steer -= (1, -1)[apply_steer < 0]
-            self.hca_frame_same_torque = 0
-        else:
-          self.hca_frame_same_torque = 0
-        hca_enabled = abs(apply_steer) > 0
+        self.PLA_status = 6 if self.PLA_entryCounter >= 11 else 4
+        self.PLA_ESP_status = 6 if self.PLA_entryCounter >= 32 else 4
+        self.PLA_entryCounter += 1 if self.PLA_entryCounter <= 32 else self.PLA_entryCounter
+        if CS.LH2_steeringState != 64 and self.PLA_entryCounter >= 30:
+          self.PLA_entryCounter = 0
       else:
-        hca_enabled = False
-        apply_steer = 0
+        self.PLA_status = 8
+        self.PLA_ESP_status = 8
+        self.PLA_entryCounter = 0
 
-      if not hca_enabled:
-        self.hca_frame_timer_running = 0
+      apply_angle = apply_std_steer_angle_limits(actuators.steeringAngleDeg, self.apply_angle_last, CS.out.vEgo, CarControllerParams) \
+        if CC.latActive and self.PLA_status == 6 else self.CSsteeringAngleDegLast
 
-      self.eps_timer_soft_disable_alert = self.hca_frame_timer_running > self.CCP.STEER_TIME_ALERT / DT_CTRL
-      self.apply_steer_last = apply_steer
-      can_sends.append(self.CCS.create_steering_control(self.packer_pt, CANBUS.pt, apply_steer, hca_enabled))
+      self.apply_angle_last = apply_angle
+      self.CSsteeringAngleDegLast = CS.out.steeringAngleDeg
+      can_sends.append(self.CCS.create_steering_control(self.packer_pt, CANBUS.br, apply_angle, self.PLA_status, self.PLA_ESP_status, self.CSLH3_SignLast))
+      self.CSLH3_SignLast = CS.LH_3_Sign
 
-      if self.CP.flags & VolkswagenFlags.STOCK_HCA_PRESENT:
-        # Pacify VW Emergency Assist driver inactivity detection by changing its view of driver steering input torque
-        # to the greatest of actual driver input or 2x openpilot's output (1x openpilot output is not enough to
-        # consistently reset inactivity detection on straight level roads). See commaai/openpilot#23274 for background.
-        ea_simulated_torque = clip(apply_steer * 2, -self.CCP.STEER_MAX, self.CCP.STEER_MAX)
-        if abs(CS.out.steeringTorque) > abs(ea_simulated_torque):
-          ea_simulated_torque = CS.out.steeringTorque
-        can_sends.append(self.CCS.create_eps_update(self.packer_pt, CANBUS.cam, CS.eps_stock_values, ea_simulated_torque))
+    # **** Gate_Komf Spammer ************************************************ #
+    if self.PLA_entryCounter <= 30 and CC.latActive:
+      can_sends.append(self.CCS.create_gk_spam(self.packer_pt, CANBUS.br, CS.Gate_Komf_stock))
+
 
     # **** Acceleration Controls ******************************************** #
 
@@ -86,18 +75,6 @@ class CarController(CarControllerBase):
       stopping = actuators.longControlState == LongCtrlState.stopping
       starting = actuators.longControlState == LongCtrlState.pid and (CS.esp_hold_confirmation or CS.out.vEgo < self.CP.vEgoStopping)
 
-      if CS.out.vEgo == 0 and CC.longActive: #try pulsing brake every 1s to prevent ABS fault?
-        pulseAccelEntry = +1
-        if pulseAccelEntry >= 50: # 1 second of standstill
-          pulseAccelCounter = +1
-          if pulseAccelCounter > 4:
-            pulseAccelEntry = 0
-            pulseAccelCounter = 0
-      else:
-        pulseAccelEntry = 0
-        pulseAccelCounter = 0
-
-      accel = accel if pulseAccelCounter == 0 else 0
       can_sends.extend(self.CCS.create_acc_accel_control(self.packer_pt, CANBUS.pt, CS.acc_type, accel,
                                                          acc_control, stopping, starting, CS.esp_hold_confirmation))
 
@@ -127,10 +104,14 @@ class CarController(CarControllerBase):
       can_sends.append(self.CCS.create_acc_buttons_control(self.packer_pt, ext_bus, CS.gra_stock_values,
                                                            cancel=CC.cruiseControl.cancel, resume=CC.cruiseControl.resume))
 
-    new_actuators = actuators.copy()
-    new_actuators.steer = self.apply_steer_last / self.CCP.STEER_MAX
-    new_actuators.steerOutputCan = self.apply_steer_last
 
+    new_actuators = actuators.copy()
+    new_actuators.steeringAngleDeg = self.apply_angle_last
+    self.eps_timer_soft_disable_alert = False
+
+    CS.Gate_Komf_stock = 0
     self.gra_acc_counter_last = CS.gra_stock_values["COUNTER"]
-    self.frame += 1
+    self.frameLast = self.frame
+
+
     return new_actuators, can_sends, self.eps_timer_soft_disable_alert

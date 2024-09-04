@@ -6,7 +6,7 @@ from cereal import car
 from panda.python import uds
 from opendbc.can.can_define import CANDefine
 from openpilot.common.conversions import Conversions as CV
-from openpilot.selfdrive.car import dbc_dict, CarSpecs, DbcDict, PlatformConfig, Platforms
+from openpilot.selfdrive.car import dbc_dict, AngleRateLimit, CarSpecs, DbcDict, PlatformConfig, Platforms
 from openpilot.selfdrive.car.docs_definitions import CarFootnote, CarHarness, CarDocs, CarParts, Column, \
                                            Device
 from openpilot.selfdrive.car.fw_query_definitions import FwQueryConfig, Request, p16
@@ -38,11 +38,15 @@ class CarControllerParams:
   ACCEL_MAX_PLUS = 4.0                     # 4.0 m/s max acceleration
   ACCEL_MIN = -3.5                         # 3.5 m/s max deceleration
 
+  ANGLE_RATE_LIMIT_UP = AngleRateLimit(speed_bp=[0., 15.], angle_v=[10, 10.])
+  ANGLE_RATE_LIMIT_DOWN = AngleRateLimit(speed_bp=[0., 15.], angle_v=[10, 10.])
+
   def __init__(self, CP):
     can_define = CANDefine(DBC[CP.carFingerprint]["pt"])
 
     if CP.flags & VolkswagenFlags.PQ:
       self.LDW_STEP = 5                   # LDW_1 message frequency 20Hz
+      self.GK_STEP = 10                   # GK_1 message frequency 10Hz
       self.ACC_HUD_STEP = 4               # ACC_GRA_Anzeige frequency 25Hz
       self.STEER_DRIVER_ALLOWANCE = 80    # Driver intervention threshold 0.8 Nm
       self.STEER_DELTA_UP = 6             # Max HCA reached in 1.00s (STEER_MAX / (50Hz * 1.00))
@@ -72,6 +76,7 @@ class CarControllerParams:
 
     else:
       self.LDW_STEP = 10                  # LDW_02 message frequency 10Hz
+      self.GK_STEP = 10                   # GK_1 message frequency 10Hz
       self.ACC_HUD_STEP = 6               # ACC_02 message frequency 16Hz
       self.STEER_DRIVER_ALLOWANCE = 80    # Driver intervention threshold 0.8 Nm
       self.STEER_DELTA_UP = 4             # Max HCA reached in 1.50s (STEER_MAX / (50Hz * 1.50))
@@ -107,6 +112,7 @@ class CarControllerParams:
 
 class CANBUS:
   pt = 0
+  br = 1
   cam = 2
 
 

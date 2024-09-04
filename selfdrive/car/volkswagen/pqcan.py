@@ -1,12 +1,14 @@
-def create_steering_control(packer, bus, apply_steer, lkas_enabled):
+def create_steering_control(packer, bus, apply_angle, PLA_status, PLA_ESP_status, LH_3_Sign):
   values = {
-    "LM_Offset": abs(apply_steer),
-    "LM_OffSign": 1 if apply_steer < 0 else 0,
-    "HCA_Status": 7 if (lkas_enabled and apply_steer != 0) else 3,
-    "Vib_Freq": 16,
+    "PL1_Status_EPS": PLA_status,
+    "PL1_ArcAngleReq": abs(apply_angle),
+    "PL1_AngleReqSign": (1 if apply_angle < 0 else 0) if PLA_status == 6 else LH_3_Sign,
+    "PL1_Stat_PLA_ESP": PLA_ESP_status,
+    "PL1_Bremsmoment": 0,
+    "PL1_void": 0,
   }
 
-  return packer.make_can_msg("HCA_1", bus, values)
+  return packer.make_can_msg("PLA_1", bus, values)
 
 
 def create_lka_hud_control(packer, bus, ldw_stock_values, enabled, steering_pressed, hud_alert, hud_control, lat_active):
@@ -46,6 +48,14 @@ def create_acc_buttons_control(packer, bus, gra_stock_values, cancel=False, resu
   })
 
   return packer.make_can_msg("GRA_Neu", bus, values)
+
+def create_gk_spam(packer, bus, gk_stock):
+  values = gk_stock
+  values.update({
+    "GK1_Rueckfahr": 1,
+  })
+
+  return packer.make_can_msg("Gate_Komf_1", bus, values)
 
 def acc_control_value(main_switch_on, acc_faulted, long_active, cruiseOverride):
   if long_active or cruiseOverride:

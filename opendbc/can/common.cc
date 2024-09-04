@@ -193,11 +193,21 @@ unsigned int xor_checksum(uint32_t address, const Signal &sig, const std::vector
   uint8_t checksum = 0;
   int checksum_byte = sig.start_bit / 8;
 
-  // Simple XOR over the payload, except for the byte where the checksum lives.
-  for (int i = 0; i < d.size(); i++) {
-    if (i != checksum_byte) {
-      checksum ^= d[i];
-    }
+  switch(address){
+    case 0x3D4: // mPLA_1, TX from OP
+      for (int i = 0; i < 4; i++) {
+        if (i != checksum_byte) {
+          checksum ^= d[i];
+        }
+      }
+      break;
+    default:    // Simple XOR over the payload, except for the byte where the checksum lives.
+      for (int i = 0; i < d.size(); i++) {
+        if (i != checksum_byte) {
+          checksum ^= d[i];
+        }
+      }
+      break;
   }
 
   return checksum;
