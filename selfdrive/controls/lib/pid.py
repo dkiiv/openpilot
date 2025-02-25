@@ -9,13 +9,15 @@ class PIDController:
     self._k_p = k_p
     self._k_i = k_i
     self._k_d = k_d
-    self.k_f = k_f   # feedforward gain
+    self._k_f = k_f   # feedforward gain
     if isinstance(self._k_p, Number):
       self._k_p = [[0], [self._k_p]]
     if isinstance(self._k_i, Number):
       self._k_i = [[0], [self._k_i]]
     if isinstance(self._k_d, Number):
       self._k_d = [[0], [self._k_d]]
+    if isinstance(self._k_f, Number):
+      self._k_f = [[0], [self._k_f]]
 
     self.pos_limit = pos_limit
     self.neg_limit = neg_limit
@@ -37,6 +39,10 @@ class PIDController:
   @property
   def k_d(self):
     return interp(self.speed, self._k_d[0], self._k_d[1])
+
+  @property
+  def k_f(self):
+    return interp(self.speed, self._k_f[0], self._k_f[1])
 
   @property
   def error_integral(self):
