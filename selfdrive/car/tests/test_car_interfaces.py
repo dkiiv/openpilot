@@ -85,7 +85,7 @@ class TestCarInterfaces:
     if car_params.steerControlType != car.CarParams.SteerControlType.angle:
       tune = car_params.lateralTuning
       if tune.which() == 'pid':
-        assert not math.isnan(tune.pid.kf) and tune.pid.kf > 0
+        assert len(tune.pid.kfV) > 0 and len(tune.pid.kfV) == len(tune.pid.kfBP)
         assert len(tune.pid.kpV) > 0 and len(tune.pid.kpV) == len(tune.pid.kpBP)
         assert len(tune.pid.kiV) > 0 and len(tune.pid.kiV) == len(tune.pid.kiBP)
 

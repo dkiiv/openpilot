@@ -141,7 +141,8 @@ class CarInterface(CarInterfaceBase):
     # Start with a baseline tuning for all GM vehicles. Override tuning as needed in each model section below.
     ret.lateralTuning.pid.kiBP, ret.lateralTuning.pid.kpBP = [[0.], [0.]]
     ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.2], [0.00]]
-    ret.lateralTuning.pid.kf = 0.00004   # full torque for 20 deg at 80mph means 0.00007818594
+    ret.lateralTuning.pid.kfBP = [0.]
+    ret.lateralTuning.pid.kfV = [0.00004]   # full torque for 20 deg at 80mph means 0.00007818594
     ret.steerActuatorDelay = 0.1  # Default delay, not measured yet
 
     ret.steerLimitTimer = 0.4
@@ -153,7 +154,8 @@ class CarInterface(CarInterfaceBase):
       ret.lateralTuning.pid.kpV = [0., 0.17]
       ret.lateralTuning.pid.kiBP = [0.]
       ret.lateralTuning.pid.kiV = [0.]
-      ret.lateralTuning.pid.kf = 1.  # get_steer_feedforward_volt()
+      ret.lateralTuning.pid.kfBP = [0.]
+      ret.lateralTuning.pid.kfV = [1.]  # get_steer_feedforward_volt()
       ret.steerActuatorDelay = 0.2
 
     elif candidate == CAR.GMC_ACADIA:
@@ -174,7 +176,8 @@ class CarInterface(CarInterfaceBase):
       if candidate == CAR.CADILLAC_ESCALADE_ESV:
         ret.lateralTuning.pid.kiBP, ret.lateralTuning.pid.kpBP = [[10., 41.0], [10., 41.0]]
         ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.13, 0.24], [0.01, 0.02]]
-        ret.lateralTuning.pid.kf = 0.000045
+        ret.lateralTuning.pid.kfBP = [0.]
+        ret.lateralTuning.pid.kfV = [0.000045]
       else:
         ret.steerActuatorDelay = 0.2
         CarInterfaceBase.configure_torque_tune(candidate, ret.lateralTuning)
