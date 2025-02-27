@@ -79,7 +79,7 @@ class CarInterface(CarInterfaceBase):
 
       # lateral PIDF tuning
       bpoints = [[0., 36.]] * 4
-      values = [[.1, .1], [0., 0.], [0., 0.], [0., 0.]]
+      values = [[.1, .1], [0., 0.], [0., 0.], [0.00001, 0.00001]]
       #          kpV       kiV       kdV       kfV
 
       ret.lateralTuning.pid.kpBP, ret.lateralTuning.pid.kiBP, \
