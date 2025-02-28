@@ -80,8 +80,8 @@ class CarInterface(CarInterfaceBase):
       # lateral PIDF tuning
       # 65535 floating point > 655.35 > signed int > 327.675kmh > divided by 6 BP's > 54.6125 * kmhToMs > 15.17013889ms increments
       # bpoints = [[0., 15.17013889, 30.34027778, 45.51041667, 60.68055556, 75.85069445, 91.02083334]] * 4
-      bpoints = [[0., 91.02083334]] * 4
-      values = [[.1, .1], [0., 0.], [0., 0.], [0.00001, 0.00001]]
+      bpoints = [[0., 30.34027778]] * 4
+      values = [[.15, .15], [0., 0.], [0., 0.], [0.00001, 0.00001]]
       #          kpV       kiV       kdV       kfV
 
       ret.lateralTuning.pid.kpBP, ret.lateralTuning.pid.kiBP, \
