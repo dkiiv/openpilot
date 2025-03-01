@@ -79,10 +79,11 @@ class CarInterface(CarInterfaceBase):
 
       # lateral PIDF tuning
       # 65535 floating point > 655.35 > signed int > 327.675kmh > divided by 6 BP's > 54.6125 * kmhToMs > 15.17013889ms increments
+      #             0mph      30mph        60mph       100mph
       # bpoints = [[0., 15.17013889, 30.34027778, 45.51041667, 60.68055556, 75.85069445, 91.02083334]] * 4
       bpoints = [[0., 30.34027778]] * 4
-      values = [[.2, .2], [.008, 0.], [.02, .02], [0.000023, 0.000017]]
-      #          kpV       kiV       kdV       kfV
+      values = [[.2, .2], [.006, 0.001], [.023, .023], [0.000022, 0.000017]]
+      #          kpV         kiV           kdV         kfV
 
       ret.lateralTuning.pid.kpBP, ret.lateralTuning.pid.kiBP, \
         ret.lateralTuning.pid.kdBP, ret.lateralTuning.pid.kfBP = bpoints
