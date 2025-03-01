@@ -82,7 +82,8 @@ class CarInterface(CarInterfaceBase):
       #             0mph      30mph        60mph       100mph
       # bpoints = [[0., 15.17013889, 30.34027778, 45.51041667, 60.68055556, 75.85069445, 91.02083334]] * 4
       bpoints = [[0., 30.34027778]] * 4
-      values = [[.22, .22], [.0005, 0.0005], [.03, .03], [0.000024, 0.000024]]
+      # values = [[.22, .22], [.0005, 0.0005], [.03, .03], [0.000024, 0.000024]]
+      values = [[1., 1.], [0., 0.], [0., 0.], [0.0001, 0.0001]]
       #          kpV         kiV           kdV         kfV
 
       ret.lateralTuning.pid.kpBP, ret.lateralTuning.pid.kiBP, \
