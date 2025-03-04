@@ -24,6 +24,7 @@ from selfdrive.controls.lib.vehicle_model import ACCELERATION_DUE_TO_GRAVITY
 from pathlib import Path
 from collections import deque
 from common.numpy_fast import interp
+import zstandard as zstd  # Make sure zstd is imported
 
 from tools.tuning.lat_settings import *
 if not PREPROCESS_ONLY:
@@ -576,31 +577,45 @@ def load(path, route=None, preprocess=False, dongleid=False, outpath=""):
                 latsegs.add(p1)
                 latsegs.add(p2)
           print(f"{len(latsegs)//2} blacklisted files")
-          filenames = sorted([filename for filename in os.listdir(path) if filename.endswith("rlog.bz2") and filename not in latsegs])
+          filenames = sorted([filename for filename in os.listdir(path) if filename.endswith("rlog.zst") and filename not in latsegs])
           def process_file(filename):
-            if len(filename.split('--')) == 4 and filename.endswith('rlog.bz2'):
+            if len(filename.split('--')) == 4 and filename.endswith('rlog.zst'):
               seg_num = filename.split('--')[2]
-              route='--'.join(filename.split('--')[:2]).replace('_','|')
+              route = '--'.join(filename.split('--')[:2]).replace('_', '|')
               latfile = os.path.join(outpath, f"{route}--{seg_num}.lat")
               if filename not in latsegs:
-                # print(f'loading rlog segment {fi} of {num_files} {filename}')
-                with tempfile.TemporaryDirectory() as d:
-                  try:
-                    shutil.copy(os.path.join(path,filename),os.path.join(d,filename))
-                    r = Route(route, data_dir=d)
-                    lr = MultiLogIterator(r.log_paths(), sort_by_time=True)
-                    data1 = collect(lr)
-                    # print(f"{len(data1)} points in {filename}")
-                    if len(data1):
-                      with open(latfile, 'wb') as f:
-                        pickle.dump(data1, f)
-                    if outpath == path:
-                      os.remove(os.path.join(path,filename))
-                  except Exception as e:
-                    print(f"Failed to load segment file {filename}:\n{e}")
+                try:
+                  # Open .zst file using zstandard
+                  with open(os.path.join(path, filename), 'rb') as f:
+                    dctx = zstd.ZstdDecompressor()
+                    
+                    # Decompress the content in memory (no temp directory used)
+                    with dctx.stream_reader(f) as reader:
+                      decompressed_data = reader.read()  # Read all decompressed content
+                      
+                      # Handle the decompressed data, assuming it's directly usable
+                      # For example, we could write it to a file or process it in memory
+                      with open(os.path.join(path, filename.replace('.zst', '')), 'wb') as decompressed_file:
+                        decompressed_file.write(decompressed_data)
+                    
+                  # Now that we have decompressed the file, we can process it using the Route class
+                  r = Route(route, data_dir=path)  # Point to the directory where the decompressed data is
+                  lr = MultiLogIterator(r.log_paths(), sort_by_time=True)
+                  data1 = collect(lr)
+                  
+                  if len(data1):
+                    with open(latfile, 'wb') as f_lat:
+                      pickle.dump(data1, f_lat)
+                  
+                  # Optionally remove the original .zst file
+                  if outpath == path:
+                    os.remove(os.path.join(path, filename))
+
+                except Exception as e:
+                  print(f"Failed to load segment file {filename}:\n{e}")
               else:
                 if outpath == path:
-                  os.remove(os.path.join(path,filename))
+                  os.remove(os.path.join(path, filename))
           p_map(process_file, filenames, desc="Preparing fit data from rlogs")
           if preprocess:
             for filename in filenames:
