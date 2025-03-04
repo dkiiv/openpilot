@@ -1,8 +1,8 @@
 import numpy as np
 
-PREPROCESS_ONLY = True
+PREPROCESS_ONLY = False
 REGULARIZED = False
-IS_ANGLE_PLOT = True
+IS_ANGLE_PLOT = True  # set to false for torque fits, true for angle/pid
 SPEED_PLOTS = True # For all speeds at a fixed angle, plot steer
 ANGLE_PLOTS = True # For all angles at a fixed speed, plot steer
 FIT_EACH_PLOT = False # Print curve fit for each plot
