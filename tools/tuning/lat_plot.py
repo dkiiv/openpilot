@@ -362,9 +362,11 @@ def old_feedforward(speed, angle):
 
 
 def new_feedforward(speed, angle):
-  return feedforward(speed, angle, A, B, C, D, SIGMOID_COEF_RIGHT, SIGMOID_COEF_LEFT, SPEED_COEF, SPEED_COEF2, SPEED_OFFSET2)
+  return np.vectorize(torque_from_lateral_accel_siglin)(speed, angle, A, B, C, D)
 
 def feedforward(speed, angle, A, B, C, D, SIGMOID_COEF_RIGHT, SIGMOID_COEF_LEFT, SPEED_COEF, SPEED_COEF2, SPEED_OFFSET2):
+  
+  return np.vectorize(torque_from_lateral_accel_siglin)(speed, angle, A, B, C, D)
   if IS_ANGLE_PLOT:
     # return A * angle * speed ** SPEED_COEF # tahoe angle fit
 
@@ -415,7 +417,7 @@ def feedforward(speed, angle, A, B, C, D, SIGMOID_COEF_RIGHT, SIGMOID_COEF_LEFT,
 #   return angle * A / (np.maximum(speed - D, 0.1) * SPEED_COEF)**SIGMOID_COEF_LEFT
 
 def torque_from_lateral_accel_siglin(speed, lataccel, a, b, c, d):
-    print(f"{speed = }, {lataccel = }, {a = }, {b = }, {c = }, {d = }")
+
     def sig(val):
       # https://timvieira.github.io/blog/post/2014/02/11/exp-normalize-trick
       if val >= 0:
@@ -429,7 +431,7 @@ def torque_from_lateral_accel_siglin(speed, lataccel, a, b, c, d):
 
 def _fit_kf(x_input, A, B, C, D):
   speed, angle = x_input.copy()
-  return torque_from_lateral_accel_siglin(speed, angle, A, B, C, D)
+  return np.vectorize(torque_from_lateral_accel_siglin)(speed, angle, A, B, C, D)
 
 def fit(speed, angle, steer, angle_plot=True):
   global IS_ANGLE_PLOT
@@ -442,10 +444,8 @@ def fit(speed, angle, steer, angle_plot=True):
   print("Performing fit...")
   
   global A, B, C, D
-  BOUNDS = ([0.001, 0.01, 0.01, 0.],
-            [10.0, 2.0, 1.0, 1.0]) if IS_ANGLE_PLOT else \
-          ([0.001, 0.01, 0.01, 0.],
-            [10.0, 2.0, 1.0, 1.0])
+  BOUNDS = ([0.001, 0.01, 0.01, -1.0],
+            [20.0, 2.0, 1.0, 1.0])
   params, _ = curve_fit(  # lgtm[py/mismatched-multiple-assignment] pylint: disable=unbalanced-tuple-unpacking
     _fit_kf,
     np.array([speed, angle]),
@@ -467,9 +467,9 @@ def fit(speed, angle, steer, angle_plot=True):
 
   new_residual = np.fabs(new_feedforward(speed, angle) - steer)
   new_mae = np.mean(new_residual)
-  print('MAE old {}, new {}'.format(round(new_mae, 4)))
+  print('MAE new {}'.format(round(new_mae, 4)))
   new_std = np.std(new_residual)
-  print('STD old {}, new {}'.format(round(new_std, 4)))
+  print('STD new {}'.format(round(new_std, 4)))
   
   if not os.path.exists("plots"):
     os.mkdir("plots")
