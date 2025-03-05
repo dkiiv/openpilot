@@ -11,7 +11,7 @@ ButtonType = car.CarState.ButtonEvent.Type
 EventName = car.CarEvent.EventName
 
 NON_LINEAR_TORQUE_PARAMS = {
-  CAR.VOLKSWAGEN_JETTA_MK6: [20., 0.14530889, 0.21093639, -0.01381110]
+  CAR.VOLKSWAGEN_JETTA_MK6: [20., 0.14530889, 0.21093639, -0.01381110]  #khonsu's JSW, 3501 with TTRS/RS3 firmware (unsure which)
 }
 
 class CarInterface(CarInterfaceBase):
@@ -30,7 +30,7 @@ class CarInterface(CarInterfaceBase):
     # The "lat_accel vs torque" relationship is assumed to be the sum of "sigmoid + linear" curves
     # An important thing to consider is that the slope at 0 should be > 0 (ideally >1)
     # This has big effect on the stability about 0 (noise when going straight)
-    # ToDo: To generalize to other GMs, explore tanh function as the nonlinear
+    # ToDo: To generalize to other VWs, explore tanh function as the nonlinear
     non_linear_torque_params = NON_LINEAR_TORQUE_PARAMS.get(self.CP.carFingerprint)
     assert non_linear_torque_params, "The params are not defined"
     a, b, c, _ = non_linear_torque_params
