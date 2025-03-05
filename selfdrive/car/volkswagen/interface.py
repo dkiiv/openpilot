@@ -1,16 +1,42 @@
 from cereal import car
 from panda import Panda
+from math import exp
 from openpilot.common.params import Params
-from openpilot.selfdrive.car import get_safety_config
-from openpilot.selfdrive.car.interfaces import CarInterfaceBase
+from openpilot.selfdrive.car import get_safety_config, get_friction
+from openpilot.selfdrive.car.interfaces import TorqueFromLateralAccelCallbackType, FRICTION_THRESHOLD, LatControlInputs, CarInterfaceBase
 from openpilot.selfdrive.car.volkswagen.values import CAR, CANBUS, CarControllerParams, NetworkLocation, TransmissionType, GearShifter, VolkswagenFlags, \
                                                       VolkswagenFlagsSP
 
 ButtonType = car.CarState.ButtonEvent.Type
 EventName = car.CarEvent.EventName
 
+NON_LINEAR_TORQUE_PARAMS = {
+  CAR.VOLKSWAGEN_JETTA_MK6: [20., 0.14530889, 0.21093639, -0.01381110]  #khonsu's JSW, 3501 with TTRS/RS3 firmware (unsure which)
+}
 
 class CarInterface(CarInterfaceBase):
+  def torque_from_lateral_accel_siglin(self, latcontrol_inputs: LatControlInputs, torque_params: car.CarParams.LateralTorqueTuning, lateral_accel_error: float,
+                                       lateral_accel_deadzone: float, friction_compensation: bool, gravity_adjusted: bool) -> float:
+    friction = get_friction(lateral_accel_error, lateral_accel_deadzone, FRICTION_THRESHOLD, torque_params, friction_compensation)
+
+    def sig(val):
+      # https://timvieira.github.io/blog/post/2014/02/11/exp-normalize-trick
+      if val >= 0:
+        return 1 / (1 + exp(-val)) - 0.5
+      else:
+        z = exp(val)
+        return z / (1 + z) - 0.5
+
+    # The "lat_accel vs torque" relationship is assumed to be the sum of "sigmoid + linear" curves
+    # An important thing to consider is that the slope at 0 should be > 0 (ideally >1)
+    # This has big effect on the stability about 0 (noise when going straight)
+    # ToDo: To generalize to other VWs, explore tanh function as the nonlinear
+    non_linear_torque_params = NON_LINEAR_TORQUE_PARAMS.get(self.CP.carFingerprint)
+    assert non_linear_torque_params, "The params are not defined"
+    a, b, c, _ = non_linear_torque_params
+    steer_torque = (sig(latcontrol_inputs.lateral_acceleration * a) * b) + (latcontrol_inputs.lateral_acceleration * c)
+    return float(steer_torque) + friction
+
   def __init__(self, CP, CarController, CarState):
     super().__init__(CP, CarController, CarState)
 
@@ -20,6 +46,12 @@ class CarInterface(CarInterfaceBase):
     else:
       self.ext_bus = CANBUS.cam
       self.cp_ext = self.cp_cam
+
+  def torque_from_lateral_accel(self) -> TorqueFromLateralAccelCallbackType:
+    if self.CP.carFingerprint in NON_LINEAR_TORQUE_PARAMS:
+      return self.torque_from_lateral_accel_siglin
+    else:
+      return self.torque_from_lateral_accel_linear
 
   @staticmethod
   def _get_params(ret, candidate: CAR, fingerprint, car_fw, experimental_long, docs):
