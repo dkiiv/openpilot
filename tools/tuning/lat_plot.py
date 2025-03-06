@@ -362,11 +362,11 @@ def old_feedforward(speed, angle):
 
 
 def new_feedforward(speed, angle):
-  return np.vectorize(torque_from_lateral_accel_siglin)(speed, angle, A, B, C, D)
+  return np.vectorize(torque_from_lateral_accel_siglin)(speed, angle, A, B, C, D, E, F)
 
 def feedforward(speed, angle, A, B, C, D, SIGMOID_COEF_RIGHT, SIGMOID_COEF_LEFT, SPEED_COEF, SPEED_COEF2, SPEED_OFFSET2):
   
-  return np.vectorize(torque_from_lateral_accel_siglin)(speed, angle, A, B, C, D)
+  return np.vectorize(torque_from_lateral_accel_siglin)(speed, angle, A, B, C, D, E, F)
   if IS_ANGLE_PLOT:
     # return A * angle * speed ** SPEED_COEF # tahoe angle fit
 
@@ -416,7 +416,7 @@ def feedforward(speed, angle, A, B, C, D, SIGMOID_COEF_RIGHT, SIGMOID_COEF_LEFT,
 
 #   return angle * A / (np.maximum(speed - D, 0.1) * SPEED_COEF)**SIGMOID_COEF_LEFT
 
-def torque_from_lateral_accel_siglin(speed, lataccel, a, b, c, d):
+def torque_from_lateral_accel_siglin(speed, lataccel, a, b, c, d, e, f):
 
     def sig(val):
       # https://timvieira.github.io/blog/post/2014/02/11/exp-normalize-trick
@@ -426,12 +426,13 @@ def torque_from_lateral_accel_siglin(speed, lataccel, a, b, c, d):
         z = exp(val)
         return z / (1 + z) - 0.5
 
-    steer_torque = (sig(lataccel * a) * b) + (lataccel * c) + d
+    speed_factor = (40.23 / (max(1.0,speed + e))**f)
+    steer_torque = (sig(lataccel * a * speed_factor) * b) + (lataccel * c) + d
     return float(steer_torque)
 
-def _fit_kf(x_input, A, B, C, D):
+def _fit_kf(x_input, A, B, C, D, E, F):
   speed, angle = x_input.copy()
-  return np.vectorize(torque_from_lateral_accel_siglin)(speed, angle, A, B, C, D)
+  return np.vectorize(torque_from_lateral_accel_siglin)(speed, angle, A, B, C, D, E, F)
 
 def fit(speed, angle, steer, angle_plot=True):
   global IS_ANGLE_PLOT
@@ -443,9 +444,9 @@ def fit(speed, angle, steer, angle_plot=True):
   
   print("Performing fit...")
   
-  global A, B, C, D
-  BOUNDS = ([0.001, 0.01, 0.01, -1.0],
-            [20.0, 2.0, 1.0, 1.0])
+  global A, B, C, D, E, F
+  BOUNDS = ([0.001, 0.01, 0.01, -1.0, 15.0, 0.1],
+            [20.0, 2.0, 1.0, 1.0, 40.0, 2.0])
   params, _ = curve_fit(  # lgtm[py/mismatched-multiple-assignment] pylint: disable=unbalanced-tuple-unpacking
     _fit_kf,
     np.array([speed, angle]),
@@ -453,7 +454,7 @@ def fit(speed, angle, steer, angle_plot=True):
     maxfev=900000,
     bounds=BOUNDS
   )
-  A, B, C, D = params
+  A, B, C, D, E, F = params
   print(f'Fit: {params}')
   i = 0
   print(f"{A = :.8f} in [{BOUNDS[0][i]}, {BOUNDS[1][i]}]")
@@ -463,6 +464,10 @@ def fit(speed, angle, steer, angle_plot=True):
   print(f"{C = :.8f} in [{BOUNDS[0][i]}, {BOUNDS[1][i]}]")
   i += 1
   print(f"{D = :.8f} in [{BOUNDS[0][i]}, {BOUNDS[1][i]}]")
+  i += 1
+  print(f"{E = :.8f} in [{BOUNDS[0][i]}, {BOUNDS[1][i]}]")
+  i += 1
+  print(f"{F = :.8f} in [{BOUNDS[0][i]}, {BOUNDS[1][i]}]")
   print(f"{BOUNDS = }")
 
   new_residual = np.fabs(new_feedforward(speed, angle) - steer)
@@ -478,6 +483,8 @@ def fit(speed, angle, steer, angle_plot=True):
     f.write(f"    {B = :.8f}\n")
     f.write(f"    {C = :.8f}\n")
     f.write(f"    {D = :.8f}\n")
+    f.write(f"    {E = :.8f}\n")
+    f.write(f"    {F = :.8f}\n")
     f.write('mean absolute error: new {}\n'.format(round(new_mae, 4)))
     f.write('standard deviation: new {}\n'.format(round(new_std, 4)))
     f.write(f"fit computed using {len(speed)} points")
