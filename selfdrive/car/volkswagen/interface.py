@@ -11,7 +11,7 @@ ButtonType = car.CarState.ButtonEvent.Type
 EventName = car.CarEvent.EventName
 
 NON_LINEAR_TORQUE_PARAMS = {
-  CAR.VOLKSWAGEN_JETTA_MK6: [20., 0.14530889, 0.21093639, -0.01381110]  #khonsu's JSW, 3501 with TTRS/RS3 firmware (unsure which)
+  CAR.VOLKSWAGEN_JETTA_MK6: [5.79285218, 0.23394652, 0.14425229, -0.00086416]  #khonsu's JSW, 3501 with TTRS/RS3 firmware (unsure which)
 }
 
 class CarInterface(CarInterfaceBase):
