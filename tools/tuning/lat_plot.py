@@ -456,7 +456,7 @@ def fit(speed, angle, steer, angle_plot=True):
     bounds=BOUNDS
   )
   A, B, C, D, E, F, G, H = params
-  print(f'Fit: {params}')
+  print(f"Fit = [{A}, {B}, {C}, {D}, {E}, {F}, {G}, {H}]")
   i = 0
   print(f"{A = :.8f} in [{BOUNDS[0][i]}, {BOUNDS[1][i]}]")
   i += 1
