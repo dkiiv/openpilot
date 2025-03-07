@@ -1,7 +1,7 @@
 import numpy as np
 
-PREPROCESS_ONLY = False
-REGULARIZED = False
+PREPROCESS_ONLY = False  # true if no lat files
+REGULARIZED = False  # set to true if all logs processed, will simply make the fit
 IS_ANGLE_PLOT = False  # set to false for torque fits, true for angle/pid
 SPEED_PLOTS = True # For all speeds at a fixed angle, plot steer
 ANGLE_PLOTS = True # For all angles at a fixed speed, plot steer
