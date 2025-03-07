@@ -11,7 +11,7 @@ ButtonType = car.CarState.ButtonEvent.Type
 EventName = car.CarEvent.EventName
 
 NON_LINEAR_TORQUE_PARAMS = {
-  CAR.VOLKSWAGEN_JETTA_MK6: [5.79285218, 0.23394652, 0.14425229, -0.00086416]  #khonsu's JSW, 3501 with TTRS/RS3 firmware (unsure which)
+  CAR.VOLKSWAGEN_JETTA_MK6: [19.99999999, 0.30000000, 0.25000000, -0.00202453, 15.00000000, 1.87328341, 40.00000000, 1.00000000]  #khonsu's JSW, 3501 with TTRS/RS3 firmware (unsure which)
 }
 
 class CarInterface(CarInterfaceBase):
@@ -33,8 +33,12 @@ class CarInterface(CarInterfaceBase):
     # ToDo: To generalize to other VWs, explore tanh function as the nonlinear
     non_linear_torque_params = NON_LINEAR_TORQUE_PARAMS.get(self.CP.carFingerprint)
     assert non_linear_torque_params, "The params are not defined"
-    a, b, c, _ = non_linear_torque_params
-    steer_torque = (sig(latcontrol_inputs.lateral_acceleration * a) * b) + (latcontrol_inputs.lateral_acceleration * c)
+    a, b, c, _, e, f, g, h = non_linear_torque_params
+
+    speed_factor = (40.23 / (max(1.0, latcontrol_inputs.vego + e))**f)
+    speed_factor2 = max(0.2, 40.23 / (max(1.0, latcontrol_inputs.vego + g))**h)
+    steer_torque = (sig(latcontrol_inputs.lateral_acceleration * a * speed_factor) * b * speed_factor2) + (latcontrol_inputs.lateral_acceleration * c)
+
     return float(steer_torque) + friction
 
   def __init__(self, CP, CarController, CarState):
