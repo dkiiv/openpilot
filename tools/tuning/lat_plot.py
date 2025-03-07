@@ -446,8 +446,8 @@ def fit(speed, angle, steer, angle_plot=True):
   print("Performing fit...")
   
   global A, B, C, D, E, F, G, H
-  BOUNDS = ([0.001, .3, 0.25, -1.0, 15.0, 0.1, 30.0, 0.1],
-            [20.0, 2.0, 1.0, 1.0, 40.0, 2.0, 40.0, 1.0])
+  BOUNDS = ([0.001, .01, 0.36, -1.0, 15.0, 0.1, 0.1, 0.1],
+            [20.0, 2.0, 1.0, 1.0, 40.0, 2.0, 40.0, 2.0])
   params, _ = curve_fit(  # lgtm[py/mismatched-multiple-assignment] pylint: disable=unbalanced-tuple-unpacking
     _fit_kf,
     np.array([speed, angle]),
@@ -614,7 +614,7 @@ def plot(speed, angle, steer):
     res = 1000
 
     _speeds = []
-    STEP = 10 # mph
+    STEP = 3 # mph
     for s in range(SPEED_MIN, 90, STEP):
       _speeds.append([s, s + STEP])
     _speeds = np.r_[_speeds]
