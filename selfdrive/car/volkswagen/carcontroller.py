@@ -83,7 +83,7 @@ class CarController(CarControllerBase):
     self.EPB_brake = 0
     self.EPB_brake_last = 0
     self.EPB_enable = 0
-    self.EPB_enable_history = [False] * 10
+    self.EPB_enable_history = [False] * 25  # 0.5s history
     self.EPB_active = 0
     self.EPB_counter = 0
     self.accel_diff = 0
@@ -309,7 +309,7 @@ class CarController(CarControllerBase):
       if self.frame % 2 or CS.motor2_stock != getattr(self, 'motor2_last', CS.motor2_stock):  # 50hz / 20ms
         can_sends.append(self.CCS.filter_motor2(self.packer_pt, CANBUS.cam, CS.motor2_stock, self.EPB_enable_history[0]))
         if CS.motor2_stock["GRA_Status"] in (1, 2) and self.motor2_last["GRA_Status"] == 0:
-          self.EPB_enable_history = [False] * len(self.EPB_enable_history)  # set history to false when ECM enters cruise state
+          self.EPB_enable_history = [False] * len(self.EPB_enable_history)  # disable filter when ECM enters cruise state
       if CS.bremse8_stock["COUNTER"] != self.bremse8_counter_last:
         can_sends.append(self.CCS.filter_bremse8(self.packer_pt, CANBUS.cam, CS.bremse8_stock, self.EPB_enable_history[0]))
       if CS.bremse11_stock["COUNTER"] != self.bremse11_counter_last:
