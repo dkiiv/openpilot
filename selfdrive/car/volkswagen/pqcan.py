@@ -1,20 +1,8 @@
 def create_steering_control(packer, bus, apply_angle, PLA_status, PLA_ESP_status, LH_3_Sign):
   values = {
-    "PL1_Status_EPS": PLA_status,
-    "PL1_ArcAngleReq": abs(apply_angle),
-    "PL1_AngleReqSign": (1 if apply_angle < 0 else 0) if PLA_status == 6 else LH_3_Sign,
-    "PL1_Stat_PLA_ESP": PLA_ESP_status,
-    "PL1_Bremsmoment": 0,
-    "PL1_void": 0,
-  }
-
-  return packer.make_can_msg("PLA_1", bus, values)
-
-def HCA(packer, bus, apply_steer, lkas_enabled):
-  values = {
-    "LM_Offset": 0,
-    "LM_OffSign": 0,
-    "HCA_Status": 3,
+    "LM_Offset": abs(apply_angle),
+    "LM_OffSign": (1 if apply_angle < 0 else 0) if PLA_status == 6 else LH_3_Sign,
+    "HCA_Status": PLA_status,
     "Vib_Freq": 16,
   }
 
