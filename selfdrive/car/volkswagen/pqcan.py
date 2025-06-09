@@ -1,4 +1,4 @@
-def create_steering_control(packer, bus, apply_angle, PLA_status, PLA_ESP_status, LH_3_Sign):
+def create_steering_control(packer, bus, apply_angle, PLA_status, LH_3_Sign):
   values = {
     "LM_Offset": abs(apply_angle),
     "LM_OffSign": (1 if apply_angle < 0 else 0) if PLA_status == 13 else LH_3_Sign,

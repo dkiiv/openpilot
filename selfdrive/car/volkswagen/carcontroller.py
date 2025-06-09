@@ -75,7 +75,6 @@ class CarController(CarControllerBase):
     self.ACC_anz_blind = 0
     self.ACC_anz_blind_counter = 0
     self.PLA_status = 0
-    self.PLA_ESP_status = 0
     self.PLA_entryCounter = 0
     self.PLA_driverExit = False
     self.PLA_driverExit_last = False
@@ -173,14 +172,12 @@ class CarController(CarControllerBase):
       #  11 = activatable, entry request signal. 11 frames required
       if CC.latActive and not self.PLA_driverExit:
         self.PLA_status = 13 if self.PLA_entryCounter >= 11 else 11
-        self.PLA_ESP_status = 6 if self.PLA_entryCounter >= 32 else 4
         self.PLA_entryCounter += 1 if self.PLA_entryCounter <= 32 else self.PLA_entryCounter
         # retry entry until engagement. TODO: add a counter to disable if this takes too long? (error)
         if CS.LH2_steeringState != 64 and self.PLA_entryCounter >= 30:
           self.PLA_entryCounter = 0
       else:
         self.PLA_status = 10 if self.PLA_driverExit_last and not self.PLA_driverExit else 15  # pulse reset on falling edge
-        self.PLA_ESP_status = 8
         self.PLA_entryCounter = 0
         self.PLA_driverExit_last = self.PLA_driverExit
 
@@ -189,7 +186,7 @@ class CarController(CarControllerBase):
 
       self.apply_angle_last = apply_angle
       self.CSsteeringAngleDegLast = CS.out.steeringAngleDeg
-      can_sends.append(self.CCS.create_steering_control(self.packer_pt, CANBUS.pt, apply_angle, self.PLA_status, self.PLA_ESP_status, self.CSLH3_SignLast))
+      can_sends.append(self.CCS.create_steering_control(self.packer_pt, CANBUS.pt, apply_angle, self.PLA_status, self.CSLH3_SignLast))
       self.CSLH3_SignLast = CS.LH_3_Sign
 
       if self.CP.flags & VolkswagenFlags.STOCK_HCA_PRESENT:
