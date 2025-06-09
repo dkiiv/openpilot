@@ -1,7 +1,7 @@
 def create_steering_control(packer, bus, apply_angle, PLA_status, PLA_ESP_status, LH_3_Sign):
   values = {
     "LM_Offset": abs(apply_angle),
-    "LM_OffSign": (1 if apply_angle < 0 else 0) if PLA_status == 6 else LH_3_Sign,
+    "LM_OffSign": (1 if apply_angle < 0 else 0) if PLA_status == 13 else LH_3_Sign,
     "HCA_Status": PLA_status,
     "Vib_Freq": 16,
   }
