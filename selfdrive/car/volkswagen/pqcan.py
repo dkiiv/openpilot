@@ -8,7 +8,7 @@ def create_steering_control(packer, bus, apply_angle, PLA_status, LH_3_Sign):
 
   return packer.make_can_msg("HCA_1", bus, values)
 
-def create_lka_hud_control(packer, bus, ldw_stock_values, lat_active, steering_pressed, hud_alert, hud_control):
+def create_lka_hud_control(packer, bus, ldw_stock_values, lat_active, steering_pressed, hud_alert, hud_control, pulse=0):
   values = {}
   if len(ldw_stock_values):
     values = {s: ldw_stock_values[s] for s in [
@@ -21,7 +21,7 @@ def create_lka_hud_control(packer, bus, ldw_stock_values, lat_active, steering_p
 
   values.update({
     "LDW_Kameratyp": 1,
-    "LDW_Lampe_gelb": 0 if lat_active and not steering_pressed else 1,
+    "LDW_Lampe_gelb": 1 if pulse or steering_pressed or not lat_active else 0,
     "LDW_Lampe_gruen": 1 if lat_active and not steering_pressed else 0,
     "LDW_Lernmodus_links": 3 if hud_control.leftLaneDepart else 1 + lat_active,
     "LDW_Lernmodus_rechts": 3 if hud_control.rightLaneDepart else 1 + lat_active,
