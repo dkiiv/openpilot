@@ -250,9 +250,9 @@ class CarController(CarControllerBase):
       if hud_control.visualAlert in (VisualAlert.steerRequired, VisualAlert.ldw):
         hud_alert = self.CCP.LDW_MESSAGES["laneAssistTakeOver"]
       if CC.latActive and CS.LH2_steeringState != 64 and self.frame % 2:
-        pulse = 1
-      else:
         pulse = 0
+      else:
+        pulse = 1
       can_sends.append(self.CCS.create_lka_hud_control(self.packer_pt, CANBUS.pt, CS.ldw_stock_values, (CC.latActive and CS.LH2_steeringState == 64),
                                                        CS.out.steeringPressed, hud_alert, hud_control, pulse))
 
