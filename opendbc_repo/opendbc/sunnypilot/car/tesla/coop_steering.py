@@ -20,7 +20,7 @@ class CoopSteeringCarController:
   @staticmethod
   def coop_steering_status_update(CP_SP: structs.CarParamsSP) -> CoopSteeringDataSP:
     coop_steering = CP_SP.flags & TeslaFlagsSP.COOP_STEERING.value
-    control_type = 2 if coop_steering else 1
+    control_type = 2
 
     return CoopSteeringDataSP(control_type)
 
