@@ -74,11 +74,7 @@ class AutoLaneChangeController:
 
     self.lane_change_wait_timer += DT_MDL
 
-    if self.lane_change_bsm_delay and blindspot_detected and self.lane_change_delay > 0:
-      if self.lane_change_delay == AUTO_LANE_CHANGE_TIMER[AutoLaneChangeMode.NUDGELESS]:
-        self.lane_change_wait_timer = ONE_SECOND_DELAY
-      else:
-        self.lane_change_wait_timer = self.lane_change_delay + ONE_SECOND_DELAY
+    self.lane_change_wait_timer = self.lane_change_delay + ONE_SECOND_DELAY  # conditional removed for tesla specific fork
 
   def update_allowed(self) -> bool:
     # Auto lane change allowed if:
