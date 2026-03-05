@@ -1,0 +1,59 @@
+"""
+Copyright © IQ.Lvbs, apart of Project Teal Lvbs, All Rights Reserved, licensed under https://konn3kt.com/tos
+"""
+import pyray as rl
+
+from openpilot.selfdrive.ui.mici.onroad.torque_bar import TorqueBar
+from openpilot.selfdrive.ui.ui_state import ui_state
+from openpilot.selfdrive.ui.onroad.hud_renderer import HudRenderer
+from openpilot.selfdrive.ui.iqpilot.onroad.developer_ui import DeveloperUiRenderer
+from openpilot.selfdrive.ui.iqpilot.onroad.road_name import RoadNameRenderer
+from openpilot.selfdrive.ui.iqpilot.onroad.rocket_fuel import RocketFuel
+from openpilot.selfdrive.ui.iqpilot.onroad.speed_limit import SpeedLimitRenderer
+from openpilot.selfdrive.ui.iqpilot.onroad.smart_cruise_control import SmartCruiseControlRenderer
+from openpilot.selfdrive.ui.iqpilot.onroad.turn_signal import TurnSignalController
+from openpilot.selfdrive.ui.iqpilot.onroad.circular_alerts import CircularAlertsRenderer
+from openpilot.selfdrive.ui.iqpilot.onroad.speed_renderer import SpeedRenderer
+
+
+class IQHudRenderer(HudRenderer):
+  def __init__(self):
+    super().__init__()
+    self.developer_ui = DeveloperUiRenderer()
+    self.road_name_renderer = RoadNameRenderer()
+    self.rocket_fuel = RocketFuel()
+    self.speed_limit_renderer = SpeedLimitRenderer()
+    self.smart_cruise_control_renderer = SmartCruiseControlRenderer()
+    self.turn_signal_controller = TurnSignalController()
+    self.circular_alerts_renderer = CircularAlertsRenderer()
+    self.speed_renderer = SpeedRenderer()
+    self._torque_bar = TorqueBar(scale=3.0, always=True)
+
+  def _update_state(self) -> None:
+    super()._update_state()
+    self.road_name_renderer.update()
+    self.speed_limit_renderer.update()
+    self.smart_cruise_control_renderer.update()
+    self.turn_signal_controller.update()
+    self.circular_alerts_renderer.update()
+    self.speed_renderer.update()
+
+  def _draw_current_speed(self, rect: rl.Rectangle) -> None:
+    self.speed_renderer.render(rect)
+
+  def _render(self, rect: rl.Rectangle) -> None:
+    super()._render(rect)
+
+    if ui_state.torque_bar:
+      torque_rect = rect
+      if ui_state.developer_ui in (DeveloperUiRenderer.DEV_UI_BOTTOM, DeveloperUiRenderer.DEV_UI_BOTH):
+        torque_rect = rl.Rectangle(rect.x, rect.y, rect.width, rect.height - DeveloperUiRenderer.BOTTOM_BAR_HEIGHT)
+      self._torque_bar.render(torque_rect)
+
+    self.developer_ui.render(rect)
+    self.road_name_renderer.render(rect)
+    self.speed_limit_renderer.render(rect)
+    self.smart_cruise_control_renderer.render(rect)
+    self.turn_signal_controller.render(rect)
+    self.circular_alerts_renderer.render(rect)
+    self.rocket_fuel.render(rect, ui_state.sm)

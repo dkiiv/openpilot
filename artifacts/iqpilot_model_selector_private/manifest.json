@@ -1,0 +1,37 @@
+{
+  "python/iqpilot_private/__init__.py": {
+    "mode": 420,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "size": 0
+  },
+  "python/iqpilot_private/models/__init__.cpython-312-aarch64-linux-gnu.so": {
+    "mode": 493,
+    "sha256": "7888179fd64163ddcfa367653b8163a189ce8e40f5c2946d00b9b7195a6588b6",
+    "size": 67920
+  },
+  "python/iqpilot_private/models/__init__.py": {
+    "mode": 420,
+    "sha256": "5128931b54d4f1ff131185e7711d56a788b5e2cb71e3c8154a2f79fef184b452",
+    "size": 118
+  },
+  "python/iqpilot_private/models/fetcher.cpython-312-aarch64-linux-gnu.so": {
+    "mode": 493,
+    "sha256": "2565fc49f7b38cbef30d93320703903aca318271f1d416b7f1c101bbe5692be5",
+    "size": 136272
+  },
+  "python/iqpilot_private/models/git_auth.cpython-312-aarch64-linux-gnu.so": {
+    "mode": 493,
+    "sha256": "3b54389098393aaf6d6eafc68467f3f0bf1935d7469ce6f28ed1d11f5fbde6bc",
+    "size": 68168
+  },
+  "python/iqpilot_private/models/helpers.cpython-312-aarch64-linux-gnu.so": {
+    "mode": 493,
+    "sha256": "3bab3b2480d36b9d76de3811d4fad77b371b8403578548640038e925891d7678",
+    "size": 138744
+  },
+  "python/iqpilot_private/models/manager.cpython-312-aarch64-linux-gnu.so": {
+    "mode": 493,
+    "sha256": "1ef51a05e18e0d08d817cdc16733568b8b8743743a7e47c19ff98dfc2dab44ee",
+    "size": 205984
+  }
+}

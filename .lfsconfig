@@ -1,0 +1,4 @@
+[lfs]
+	url = https://gitlab.com/tealtwo/iq.lvbs-lfs.git/info/lfs
+	pushurl = ssh://git@gitlab.com/tealtwo/iq.lvbs-lfs.git
+	locksverify = false
