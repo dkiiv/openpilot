@@ -15,12 +15,28 @@ def get_safety_CP():
   from opendbc.car.tesla.interface import CarInterface
   return CarInterface.get_non_essential_params("TESLA_MODEL_Y")
 
+def acc_stateControl(self, c):
+  # Hold state = 13 for 9 frames on rising edge
+  if c.cruiseControl.cancel and not self._prev_cancel:
+    self._cancel_frame_count = 9
+  self._prev_cancel = c.cruiseControl.cancel
+
+  if self._cancel_frame_count > 0 and not c.longActive:
+    state = 13
+    self._cancel_frame_count -= 1
+  else:
+    self._cancel_frame_count = 0
+    state = 4  # ACC_ON
+
+  return state
 
 class CarController(CarControllerBase):
   def __init__(self, dbc_names, CP, CP_IQ):
     CarControllerBase.__init__(self, dbc_names, CP, CP_IQ)
     self.coop_steer = CoopSteeringCarController()
     self.apply_angle_last = 0
+    self._prev_cancel = False
+    self._cancel_frame_count = 0
     self.packer = CANPacker(dbc_names[Bus.party])
     self.tesla_can = TeslaCAN(CP, self.packer)
 
@@ -49,7 +65,7 @@ class CarController(CarControllerBase):
     # Longitudinal control
     if self.CP.openpilotLongitudinalControl:
       if self.frame % 4 == 0:
-        state = 13 if CC.cruiseControl.cancel or CS.das_accCancel else 4  # 4=ACC_ON, 13=ACC_CANCEL_GENERIC_SILENT
+        state = self.acc_stateControl(CC)  # 4=ACC_ON, 13=ACC_CANCEL_GENERIC_SILENT
         accel = float(np.clip(actuators.accel, CarControllerParams.ACCEL_MIN, CarControllerParams.ACCEL_MAX))
         cntr = (self.frame // 4) % 8
         can_sends.append(self.tesla_can.create_longitudinal_command(state, accel, cntr, CS.out.vEgo, CC.longActive))
