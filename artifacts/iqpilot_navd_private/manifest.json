@@ -1,0 +1,47 @@
+{
+  "python/iqpilot_private/__init__.py": {
+    "mode": 420,
+    "sha256": "5128931b54d4f1ff131185e7711d56a788b5e2cb71e3c8154a2f79fef184b452",
+    "size": 118
+  },
+  "python/iqpilot_private/navd/__init__.cpython-312-aarch64-linux-gnu.so": {
+    "mode": 493,
+    "sha256": "ca2f71b555f915a666a3f72d2219cdcf8ce050d0375e111968cf4d8642dea71f",
+    "size": 105616
+  },
+  "python/iqpilot_private/navd/__init__.py": {
+    "mode": 420,
+    "sha256": "5128931b54d4f1ff131185e7711d56a788b5e2cb71e3c8154a2f79fef184b452",
+    "size": 118
+  },
+  "python/iqpilot_private/navd/event_builder.cpython-312-aarch64-linux-gnu.so": {
+    "mode": 493,
+    "sha256": "84a7e30fee9706b2c968931437c1de97fd1c33e7ee3504c231fe36f849672455",
+    "size": 545376
+  },
+  "python/iqpilot_private/navd/gps_lane_tracker.cpython-312-aarch64-linux-gnu.so": {
+    "mode": 493,
+    "sha256": "3ad02893601d3af784d43489998375f8b3d2b7997f5ee94fad793a6ee9f143f9",
+    "size": 764928
+  },
+  "python/iqpilot_private/navd/helpers.cpython-312-aarch64-linux-gnu.so": {
+    "mode": 493,
+    "sha256": "f3e0a1a4f9fd960d8a3a6cabd425f5ecb40ea3a97b9fef7ecae9f0bd66dca968",
+    "size": 970856
+  },
+  "python/iqpilot_private/navd/navd.cpython-312-aarch64-linux-gnu.so": {
+    "mode": 493,
+    "sha256": "49153e1f81cfdf39fefd4ded1b48e60cecd56be222d4a72b35ebdb0271b90f6b",
+    "size": 1644696
+  },
+  "python/iqpilot_private/navd/route_manager.cpython-312-aarch64-linux-gnu.so": {
+    "mode": 493,
+    "sha256": "52e83c32284c658d9206eae4aa2363fa8ab16425987b85d12a726c05b63d78c0",
+    "size": 2642968
+  },
+  "python/iqpilot_private/navd/web_server.cpython-312-aarch64-linux-gnu.so": {
+    "mode": 493,
+    "sha256": "251bfaa77faceb85efa132023704bccee84367e5d8a8d958909d646fa7975412",
+    "size": 1446232
+  }
+}

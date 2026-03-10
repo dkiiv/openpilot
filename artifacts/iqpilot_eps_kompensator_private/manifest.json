@@ -1,0 +1,22 @@
+{
+  "python/iqpilot_private/__init__.py": {
+    "mode": 420,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "size": 0
+  },
+  "python/iqpilot_private/selfdrive/__init__.py": {
+    "mode": 420,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "size": 0
+  },
+  "python/iqpilot_private/selfdrive/tuning/__init__.py": {
+    "mode": 420,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "size": 0
+  },
+  "python/iqpilot_private/selfdrive/tuning/eps_kompensator.cpython-312-aarch64-linux-gnu.so": {
+    "mode": 493,
+    "sha256": "af2c42b426036a3dfaad9ea3decc48ad590ef490a0f458312dc32d67cdf58a18",
+    "size": 68424
+  }
+}
